@@ -127,3 +127,72 @@ public class MainActivity extends AppCompatActivity {
             pill(r2, "Boy", "#475569", x -> { prefs.edit().putBoolean("voice_male", true).apply(); SystemEventReceiver.speak(this, "ছেলে কণ্ঠ"); });
             c.addView(r2);
             btn(c, isEn ? "1. Grant Phone/SMS Permissions" : "১. কল ও SMS পারমিশন দিন", "#F59E0B", x -> reqPerms());
+                        btn(c, isEn ? "2. Notification Access" : "২. নোটিফিকেশন অ্যাক্সেস অন করুন", "#EC4899", x -> startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)));
+            contentArea.addView(c);
+        }
+    }
+
+    private void voiceAsk() {
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
+        try { startActivityForResult(i, 303); } catch (Exception ignored) {}
+    }
+    private void pick(int c) { Intent i = new Intent(Intent.ACTION_GET_CONTENT); i.setType("text/plain"); startActivityForResult(i, c); }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (res != RESULT_OK || data == null) return;
+        if (req == 303) {
+            ArrayList<String> m = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (m != null && !m.isEmpty()) {
+                String q = m.get(0).toLowerCase();
+                if (q.contains("আরবি") || q.contains("হিজরি")) SystemEventReceiver.speak(this, SmartCalendarWeather.getHijriDateInfo(this));
+                else if (q.contains("বাংলা") || q.contains("তারিখ")) SystemEventReceiver.speak(this, SmartCalendarWeather.getBanglaDateInfo(this));
+                else if (q.contains("আবহাওয়া") || q.contains("weather")) SmartCalendarWeather.fetchAndSpeakWeather(this);
+                else SystemEventReceiver.speak(this, SmartCalendarWeather.getEnglishAndDayInfo());
+            }
+        } else if (req >= 201 && req <= 203 && data.getData() != null) {
+            String f = (req == 201) ? "ramadan.txt" : (req == 202 ? "bangla_cal.txt" : "arabic_cal.txt");
+            try {
+                InputStream in = getContentResolver().openInputStream(data.getData());
+                FileOutputStream out = new FileOutputStream(new File(getExternalFilesDir(null), f));
+                int b; while ((b = in.read()) != -1) out.write(b);
+                in.close(); out.close(); Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show();
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private LinearLayout card(String bg, String st) {
+        LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(36, 30, 36, 30);
+        GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(bg)); g.setCornerRadius(32f); g.setStroke(2, Color.parseColor(st));
+        l.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 0, 0, 24); l.setLayoutParams(p); return l;
+    }
+    private void hdr(LinearLayout p, String t) { TextView v = new TextView(this); v.setText(t); v.setTextColor(Color.WHITE); v.setTextSize(15); v.setTypeface(null, Typeface.BOLD); v.setPadding(0, 0, 0, 14); p.addView(v); }
+    private void sw(LinearLayout p, String t, String k, boolean d, boolean m) {
+        Switch s = new Switch(this); s.setText(t); s.setTextColor(Color.parseColor("#E2E8F0")); s.setPadding(0, 12, 0, 12); s.setChecked(prefs.getBoolean(k, d));
+        s.setOnCheckedChangeListener((b, c) -> { prefs.edit().putBoolean(k, c).apply(); if (m) { render(0); Intent i = new Intent(this, AssistantBackgroundService.class); if (c) startService(i); else stopService(i); } });
+        p.addView(s);
+    }
+    private void pill(LinearLayout r, String t, String c, android.view.View.OnClickListener l) {
+        Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setTextSize(11); b.setAllCaps(false);
+        GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(30f); b.setBackground(g);
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, 88, 1f); p.setMargins(5, 0, 5, 0); b.setLayoutParams(p); b.setOnClickListener(l); r.addView(b);
+    }
+    private EditText inp(String h) {
+        EditText e = new EditText(this); e.setHint(h); e.setHintTextColor(Color.GRAY); e.setTextColor(Color.WHITE); e.setPadding(24, 18, 24, 18);
+        GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor("#070B14")); g.setCornerRadius(20f); g.setStroke(2, Color.parseColor("#334155")); e.setBackground(g);
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 6, 0, 10); e.setLayoutParams(p); return e;
+    }
+    private void btn(LinearLayout p, String t, String c, android.view.View.OnClickListener l) {
+        Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setAllCaps(false);
+        GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(24f); b.setBackground(g);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, 105); lp.setMargins(0, 10, 0, 6); b.setLayoutParams(lp); b.setOnClickListener(l); p.addView(b);
+    }
+    private void reqPerms() {
+        List<String> p = new ArrayList<>(); p.add(Manifest.permission.RECEIVE_SMS); p.add(Manifest.permission.READ_SMS); p.add(Manifest.permission.READ_PHONE_STATE); p.add(Manifest.permission.CALL_PHONE); p.add(Manifest.permission.READ_CONTACTS); p.add(Manifest.permission.RECORD_AUDIO);
+        if (Build.VERSION.SDK_INT >= 33) p.add(Manifest.permission.POST_NOTIFICATIONS);
+        String[] a = new String[p.size()];
+        for (int i = 0; i < p.size(); i++) a[i] = p.get(i);
+        ActivityCompat.requestPermissions(this, a, 101);
+    }
+}
