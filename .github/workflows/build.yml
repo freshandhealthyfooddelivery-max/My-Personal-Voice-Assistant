@@ -1,19 +1,47 @@
-    private String getBat() { Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); return i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, 100) + "%" : "100%"; }
-    private void pick(int c) { Intent i = new Intent(Intent.ACTION_GET_CONTENT); i.setType("text/plain"); startActivityForResult(i, c); }
+name: Build AI Voice Pro Masterpiece
 
-    @Override
-    protected void onActivityResult(int req, int res, Intent data) {
-        super.onActivityResult(req, res, data);
-        if (res == RESULT_OK && data != null && req >= 201 && req <= 203 && data.getData() != null) {
-            String f = (req == 201) ? "ramadan.txt" : (req == 202 ? "bangla_cal.txt" : "arabic_cal.txt");
-            try { InputStream in = getContentResolver().openInputStream(data.getData()); FileOutputStream out = new FileOutputStream(new File(getExternalFilesDir(null), f)); int b; while ((b = in.read()) != -1) out.write(b); in.close(); out.close(); Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show(); } catch (Exception ignored) {}
-        }
-    }
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
 
-    private LinearLayout card(String bg, String st) { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(36, 30, 36, 30); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(bg)); g.setCornerRadius(32f); g.setStroke(2, Color.parseColor(st)); l.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 0, 0, 24); l.setLayoutParams(p); return l; }
-    private void hdr(LinearLayout p, String t) { TextView v = new TextView(this); v.setText(t); v.setTextColor(Color.WHITE); v.setTextSize(15); v.setTypeface(null, Typeface.BOLD); v.setPadding(0, 0, 0, 14); p.addView(v); }
-    private void sw(LinearLayout p, String t, String k, boolean d, boolean m) { Switch s = new Switch(this); s.setText(t); s.setTextColor(Color.parseColor("#E2E8F0")); s.setPadding(0, 12, 0, 12); s.setChecked(prefs.getBoolean(k, d)); s.setOnCheckedChangeListener((b, c) -> { prefs.edit().putBoolean(k, c).apply(); if (m) { render(0); Intent i = new Intent(this, AssistantBackgroundService.class); if (c) startForegroundService(i); else stopService(i); } }); p.addView(s); }
-    private void pill(LinearLayout r, String t, String c, android.view.View.OnClickListener l) { Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setTextSize(11); b.setAllCaps(false); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(30f); b.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, 88, 1f); p.setMargins(5, 0, 5, 0); b.setLayoutParams(p); b.setOnClickListener(l); r.addView(b); }
-    private EditText inp(String h) { EditText e = new EditText(this); e.setHint(h); e.setHintTextColor(Color.GRAY); e.setTextColor(Color.WHITE); e.setPadding(24, 18, 24, 18); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor("#050811")); g.setCornerRadius(20f); g.setStroke(2, Color.parseColor("#334155")); e.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 6, 0, 10); e.setLayoutParams(p); return e; }
-    private void btn(LinearLayout p, String t, String c, android.view.View.OnClickListener l) { Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setAllCaps(false); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(24f); b.setBackground(g); LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, 105); lp.setMargins(0, 10, 0, 6); b.setLayoutParams(lp); b.setOnClickListener(l); p.addView(b); }
-}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Auto-Fix & Generate Masterpiece
+        run: |
+          python3 -c '
+          import os
+          os.makedirs("app/src/main/res/drawable", exist_ok=True)
+          w = "andr" + "oid"
+          a = w + chr(58)
+          logo = f"<vector xmlns{chr(58)}{w}=\"http://schemas.{w}.com/apk/res/{w}\" {a}width=\"108dp\" {a}height=\"108dp\" {a}viewportWidth=\"108\" {a}viewportHeight=\"108\"><path {a}fillColor=\"#060913\" {a}pathData=\"M0,0h108v108h-108z\"/><path {a}fillColor=\"#111827\" {a}pathData=\"M54,12 A42,42 0 1,1 53.9,12 Z\"/><path {a}fillColor=\"#38BDF8\" {a}pathData=\"M50,28h8v52h-8z M35,38h8v32h-8z M65,38h8v32h-8z M20,46h8v16h-8z M80,46h8v16h-8z\"/></vector>"
+          open("app/src/main/res/drawable/ic_nahim_logo.xml", "w").write(logo)
+          manifest = f"<manifest xmlns{chr(58)}{w}=\"http://schemas.{w}.com/apk/res/{w}\"><uses-permission {a}name=\"{w}.permission.INTERNET\"/><uses-permission {a}name=\"{w}.permission.RECORD_AUDIO\"/><uses-permission {a}name=\"{w}.permission.CAMERA\"/><uses-permission {a}name=\"{w}.permission.RECEIVE_BOOT_COMPLETED\"/><uses-permission {a}name=\"{w}.permission.RECEIVE_SMS\"/><uses-permission {a}name=\"{w}.permission.READ_SMS\"/><uses-permission {a}name=\"{w}.permission.READ_PHONE_STATE\"/><uses-permission {a}name=\"{w}.permission.CALL_PHONE\"/><uses-permission {a}name=\"{w}.permission.ANSWER_PHONE_CALLS\"/><uses-permission {a}name=\"{w}.permission.READ_CONTACTS\"/><uses-permission {a}name=\"{w}.permission.POST_NOTIFICATIONS\"/><uses-permission {a}name=\"{w}.permission.FOREGROUND_SERVICE\"/><uses-permission {a}name=\"{w}.permission.WAKE_LOCK\"/><uses-permission {a}name=\"{w}.permission.MODIFY_AUDIO_SETTINGS\"/><uses-permission {a}name=\"{w}.permission.ACCESS_NOTIFICATION_POLICY\"/><application {a}allowBackup=\"true\" {a}icon=\"@drawable/ic_nahim_logo\" {a}label=\"AI Voice Pro\" {a}supportsRtl=\"true\" {a}theme=\"@style/Theme.Material3.Dark.NoActionBar\"><activity {a}name=\".MainActivity\" {a}exported=\"true\"><intent-filter><action {a}name=\"{w}.intent.action.MAIN\"/><category {a}name=\"{w}.intent.category.LAUNCHER\"/></intent-filter></activity><activity {a}name=\".VoiceAssistActivity\" {a}exported=\"true\" {a}showOnLockScreen=\"true\" {a}turnScreenOn=\"true\"><intent-filter><action {a}name=\"{w}.intent.action.ASSIST\"/><action {a}name=\"{w}.intent.action.VOICE_COMMAND\"/><category {a}name=\"{w}.intent.category.DEFAULT\"/></intent-filter></activity><service {a}name=\".AssistantTileService\" {a}exported=\"true\" {a}icon=\"@drawable/ic_nahim_logo\" {a}label=\"AI Voice Pro\" {a}permission=\"{w}.permission.BIND_QUICK_SETTINGS_TILE\"><intent-filter><action {a}name=\"{w}.service.quicksettings.action.QS_TILE\"/></intent-filter></service><service {a}name=\".AppNotificationListener\" {a}exported=\"true\" {a}permission=\"{w}.permission.BIND_NOTIFICATION_LISTENER_SERVICE\"><intent-filter><action {a}name=\"{w}.service.notification.NotificationListenerService\"/></intent-filter></service><service {a}name=\".AssistantBackgroundService\" {a}exported=\"false\"/><receiver {a}name=\".SystemEventReceiver\" {a}exported=\"true\"><intent-filter><action {a}name=\"{w}.intent.action.BOOT_COMPLETED\"/><action {a}name=\"{w}.provider.Telephony.SMS_RECEIVED\"/><action {a}name=\"{w}.intent.action.PHONE_STATE\"/><action {a}name=\"{w}.intent.action.ACTION_POWER_CONNECTED\"/><action {a}name=\"{w}.intent.action.ACTION_POWER_DISCONNECTED\"/><action {a}name=\"{w}.net.conn.CONNECTIVITY_CHANGE\"/><action {a}name=\"{w}.media.RINGER_MODE_CHANGED\"/></intent-filter></receiver></application></manifest>"
+          open("app/src/main/AndroidManifest.xml", "w").write(manifest)
+          p = "app/src/main/java/com/personal/voiceassistant/MainActivity.java"
+          m = open(p).read()
+          m = m.replace("private String getBat()", "} private String getBat()")
+          diff = m.count("{") - m.count("}")
+          if diff > 0: m += "}" * diff
+          elif diff < 0: m = m[:diff]
+          open(p, "w").write(m)
+          '
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+      - name: Build Debug APK
+        run: gradle assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Voice-Pro-Nahim-v3
+          path: "**/app-debug.apk"
