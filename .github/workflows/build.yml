@@ -349,3 +349,17 @@ jobs:
                   String{lb}{rb} a = new String{lb}p.size(){rb}; for (int i = 0; i < p.size(); i++) a{lb}i{rb} = p.get(i); ActivityCompat.requestPermissions(this, a, 101);
               }}
           }}"""
+                    open("app/src/main/java/com/personal/voiceassistant/MainActivity.java", "w").write(main_java)
+          '
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+      - name: Build Debug APK
+        run: gradle assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyVoiceAssistant-APK
+          path: "**/app-debug.apk"
+
