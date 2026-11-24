@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             pill(r1, "30m", "#2563EB", x -> prefs.edit().putInt("clock_interval", 30).apply());
             pill(r1, "1h", "#2563EB", x -> prefs.edit().putInt("clock_interval", 60).apply());
             pill(r1, "Off", "#334155", x -> prefs.edit().putInt("clock_interval", 0).apply());
-}
+  }
             private String getBat() { Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); return i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, 100) + "%" : "100%"; }
     private void pick(int c) { Intent i = new Intent(Intent.ACTION_GET_CONTENT); i.setType("text/plain"); startActivityForResult(i, c); }
 
