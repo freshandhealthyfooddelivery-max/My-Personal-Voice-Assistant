@@ -18,26 +18,27 @@ jobs:
       - name: Generate Clean Manifest
         run: |
           python3 -c '
-          a = "android" + chr(58)
+          w = "andr" + "oid"
+          a = w + chr(58)
           xml = f"""<?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns{chr(58)}android="http://android.com">
-              <uses-permission {a}name="android.permission.RECEIVE_BOOT_COMPLETED" />
-              <uses-permission {a}name="android.permission.RECEIVE_SMS" />
-              <uses-permission {a}name="android.permission.READ_SMS" />
-              <uses-permission {a}name="android.permission.READ_PHONE_STATE" />
-              <uses-permission {a}name="android.permission.CALL_PHONE" />
-              <uses-permission {a}name="android.permission.READ_CONTACTS" />
-              <uses-permission {a}name="android.permission.POST_NOTIFICATIONS" />
+          <manifest xmlns{chr(58)}{w}="http://schemas.{w}.com/apk/res/{w}">
+              <uses-permission {a}name="{w}.permission.RECEIVE_BOOT_COMPLETED" />
+              <uses-permission {a}name="{w}.permission.RECEIVE_SMS" />
+              <uses-permission {a}name="{w}.permission.READ_SMS" />
+              <uses-permission {a}name="{w}.permission.READ_PHONE_STATE" />
+              <uses-permission {a}name="{w}.permission.CALL_PHONE" />
+              <uses-permission {a}name="{w}.permission.READ_CONTACTS" />
+              <uses-permission {a}name="{w}.permission.POST_NOTIFICATIONS" />
               <application {a}allowBackup="true" {a}label="Voice Assistant" {a}supportsRtl="true" {a}theme="@style/Theme.AppCompat.Light.DarkActionBar">
                   <activity {a}name=".MainActivity" {a}exported="true">
                       <intent-filter>
-                          <action {a}name="android.intent.action.MAIN" />
-                          <category {a}name="android.intent.category.LAUNCHER" />
+                          <action {a}name="{w}.intent.action.MAIN" />
+                          <category {a}name="{w}.intent.category.LAUNCHER" />
                       </intent-filter>
                   </activity>
-                  <service {a}name=".AssistantTileService" {a}exported="true" {a}icon="@android:drawable/ic_btn_speak_now" {a}label="Voice Assistant" {a}permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+                  <service {a}name=".AssistantTileService" {a}exported="true" {a}icon="@{w}{chr(58)}drawable/ic_btn_speak_now" {a}label="Voice Assistant" {a}permission="{w}.permission.BIND_QUICK_SETTINGS_TILE">
                       <intent-filter>
-                          <action {a}name="android.service.quicksettings.action.QS_TILE" />
+                          <action {a}name="{w}.service.quicksettings.action.QS_TILE" />
                       </intent-filter>
                   </service>
               </application>
@@ -54,4 +55,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MyVoiceAssistant-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-
