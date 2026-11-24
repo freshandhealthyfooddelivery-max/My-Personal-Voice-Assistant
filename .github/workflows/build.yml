@@ -15,6 +15,17 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Fix Manifest
+        run: |
+          sed -i 's/ <uses-permission name=/ <uses-permission android:name=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ name=/ android:name=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ exported=/ android:exported=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ allowBackup=/ android:allowBackup=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ label=/ android:label=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ supportsRtl=/ android:supportsRtl=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ theme=/ android:theme=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ icon=/ android:icon=/g' app/src/main/AndroidManifest.xml
+          sed -i 's/ permission=/ android:permission=/g' app/src/main/AndroidManifest.xml
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
