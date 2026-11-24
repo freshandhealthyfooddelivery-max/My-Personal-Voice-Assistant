@@ -126,4 +126,22 @@ public class MainActivity extends AppCompatActivity {
             pill(r1, "1h", "#2563EB", x -> prefs.edit().putInt("clock_interval", 60).apply());
             pill(r1, "Off", "#334155", x -> prefs.edit().putInt("clock_interval", 0).apply());
 }
-        }}
+            private String getBat() { Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); return i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, 100) + "%" : "100%"; }
+    private void pick(int c) { Intent i = new Intent(Intent.ACTION_GET_CONTENT); i.setType("text/plain"); startActivityForResult(i, c); }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (res == RESULT_OK && data != null && req >= 201 && req <= 203 && data.getData() != null) {
+            String f = (req == 201) ? "ramadan.txt" : (req == 202 ? "bangla_cal.txt" : "arabic_cal.txt");
+            try { InputStream in = getContentResolver().openInputStream(data.getData()); FileOutputStream out = new FileOutputStream(new File(getExternalFilesDir(null), f)); int b; while ((b = in.read()) != -1) out.write(b); in.close(); out.close(); Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show(); } catch (Exception ignored) {}
+        }
+    }
+
+    private LinearLayout card(String bg, String st) { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(36, 30, 36, 30); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(bg)); g.setCornerRadius(32f); g.setStroke(2, Color.parseColor(st)); l.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 0, 0, 24); l.setLayoutParams(p); return l; }
+    private void hdr(LinearLayout p, String t) { TextView v = new TextView(this); v.setText(t); v.setTextColor(Color.WHITE); v.setTextSize(15); v.setTypeface(null, Typeface.BOLD); v.setPadding(0, 0, 0, 14); p.addView(v); }
+    private void sw(LinearLayout p, String t, String k, boolean d, boolean m) { Switch s = new Switch(this); s.setText(t); s.setTextColor(Color.parseColor("#E2E8F0")); s.setPadding(0, 12, 0, 12); s.setChecked(prefs.getBoolean(k, d)); s.setOnCheckedChangeListener((b, c) -> { prefs.edit().putBoolean(k, c).apply(); if (m) { render(0); Intent i = new Intent(this, AssistantBackgroundService.class); if (c) startForegroundService(i); else stopService(i); } }); p.addView(s); }
+    private void pill(LinearLayout r, String t, String c, android.view.View.OnClickListener l) { Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setTextSize(11); b.setAllCaps(false); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(30f); b.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, 88, 1f); p.setMargins(5, 0, 5, 0); b.setLayoutParams(p); b.setOnClickListener(l); r.addView(b); }
+    private EditText inp(String h) { EditText e = new EditText(this); e.setHint(h); e.setHintTextColor(Color.GRAY); e.setTextColor(Color.WHITE); e.setPadding(24, 18, 24, 18); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor("#050811")); g.setCornerRadius(20f); g.setStroke(2, Color.parseColor("#334155")); e.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 6, 0, 10); e.setLayoutParams(p); return e; }
+    private void btn(LinearLayout p, String t, String c, android.view.View.OnClickListener l) { Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setAllCaps(false); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(24f); b.setBackground(g); LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, 105); lp.setMargins(0, 10, 0, 6); b.setLayoutParams(lp); b.setOnClickListener(l); p.addView(b); }
+}
