@@ -15,7 +15,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Generate Premium Icon, Manifest & Auto-Fix
+      - name: Build Complete App on Server
         run: |
           python3 -c '
           import os
@@ -81,22 +81,115 @@ jobs:
           </manifest>"""
           open("app/src/main/AndroidManifest.xml", "w").write(xml)
 
-          p = "app/src/main/java/com/personal/voiceassistant/"
-          m = open(p + "MainActivity.java").read()
-          m = m.replace("byte[] buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};").replace("byte buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};")
-          diff = m.count("{") - m.count("}")
-          if diff > 0:
-              m = m + ("}" * diff)
-          open(p + "MainActivity.java", "w").write(m)
-          '
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.4'
-      - name: Build Debug APK
-        run: gradle assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: MyVoiceAssistant-APK
-          path: "**/app-debug.apk"
+          main_java = f"""package com.personal.voiceassistant;
+          import {w}.Manifest;
+          import {w}.content.Intent;
+          import {w}.content.SharedPreferences;
+          import {w}.graphics.Color;
+          import {w}.graphics.Typeface;
+          import {w}.graphics.drawable.GradientDrawable;
+          import {w}.net.Uri;
+          import {w}.os.Build;
+          import {w}.os.Bundle;
+          import {w}.os.Handler;
+          import {w}.os.Looper;
+          import {w}.provider.Settings;
+          import {w}.speech.RecognizerIntent;
+          import {w}.view.Gravity;
+          import {w}.widget.*;
+          import androidx.appcompat.app.AppCompatActivity;
+          import androidx.core.app.ActivityCompat;
+          import java.io.*;
+          import java.util.*;
+
+          public class MainActivity extends AppCompatActivity {{
+              private SharedPreferences prefs;
+              private LinearLayout contentArea;
+              private boolean isEn = false;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {{
+                  super.onCreate(savedInstanceState);
+                  if (getSupportActionBar() != null) getSupportActionBar().hide();
+                  getWindow().setStatusBarColor(Color.parseColor("#070B14"));
+                  prefs = getSharedPreferences("AssistantPrefs", MODE_PRIVATE);
+                  isEn = prefs.getBoolean("ui_english", false);
+
+                  LinearLayout mainRoot = new LinearLayout(this);
+                  mainRoot.setOrientation(LinearLayout.VERTICAL);
+                  mainRoot.setBackgroundColor(Color.parseColor("#070B14"));
+
+                  LinearLayout topBar = new LinearLayout(this);
+                  topBar.setOrientation(LinearLayout.HORIZONTAL);
+                  topBar.setPadding(40, 45, 40, 25);
+                  topBar.setGravity(Gravity.CENTER_VERTICAL);
+
+                  LinearLayout titleBox = new LinearLayout(this);
+                  titleBox.setOrientation(LinearLayout.VERTICAL);
+                  titleBox.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+
+                  TextView appTitle = new TextView(this);
+                  appTitle.setText("AI Voice Pro");
+                  appTitle.setTextColor(Color.WHITE);
+                  appTitle.setTextSize(23);
+                  appTitle.setTypeface(null, Typeface.BOLD);
+                  titleBox.addView(appTitle);
+
+                  TextView devTag = new TextView(this);
+                  devTag.setText("✦ Crafted by NAHIM");
+                  devTag.setTextColor(Color.parseColor("#FBBF24"));
+                  devTag.setTextSize(11);
+                  devTag.setTypeface(null, Typeface.BOLD);
+                  titleBox.addView(devTag);
+                  topBar.addView(titleBox);
+
+                  Button langToggle = new Button(this);
+                  langToggle.setText(isEn ? "বাংলা" : "English");
+                  langToggle.setTextColor(Color.WHITE);
+                  langToggle.setTextSize(12);
+                  langToggle.setAllCaps(false);
+                  GradientDrawable lg = new GradientDrawable();
+                  lg.setColor(Color.parseColor("#1E293B"));
+                  lg.setCornerRadius(30f);
+                  lg.setStroke(2, Color.parseColor("#38BDF8"));
+                  langToggle.setBackground(lg);
+                  langToggle.setOnClickListener(v -> {{
+                      isEn = !isEn;
+                      prefs.edit().putBoolean("ui_english", isEn).apply();
+                      recreate();
+                  }});
+                  topBar.addView(langToggle);
+                  mainRoot.addView(topBar);
+
+                  ScrollView scroll = new ScrollView(this);
+                  scroll.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
+                  contentArea = new LinearLayout(this);
+                  contentArea.setOrientation(LinearLayout.VERTICAL);
+                  contentArea.setPadding(36, 10, 36, 30);
+                  scroll.addView(contentArea);
+                  mainRoot.addView(scroll);
+
+                  LinearLayout navBar = new LinearLayout(this);
+                  navBar.setOrientation(LinearLayout.HORIZONTAL);
+                  navBar.setBackgroundColor(Color.parseColor("#0F172A"));
+                  navBar.setPadding(12, 16, 12, 20);
+                  addNavTab(navBar, isEn ? "Home" : "হোম", 0);
+                  addNavTab(navBar, isEn ? "Call/Msg" : "কল/মেসেজ", 1);
+                  addNavTab(navBar, isEn ? "Power/Sec" : "নিরাপত্তা", 2);
+                  addNavTab(navBar, isEn ? "Calendar" : "ক্যালেন্ডার", 3);
+                  addNavTab(navBar, isEn ? "Settings" : "সেটিংস", 4);
+                  mainRoot.addView(navBar);
+
+                  setContentView(mainRoot);
+                  renderTab(0);
+                  if (prefs.getBoolean("master_switch", false)) startService(new Intent(this, AssistantBackgroundService.class));
+              }}
+
+              private void addNavTab(LinearLayout bar, String label, int idx) {{
+                  Button b = new Button(this);
+                  b.setText(label);
+                  b.setTextColor(Color.WHITE);
+                  b.setTextSize(11);
+                  b.setAllCaps(false);
+                  b.setBackgroundColor(Color.TRANSPARENT);
+                  b.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
