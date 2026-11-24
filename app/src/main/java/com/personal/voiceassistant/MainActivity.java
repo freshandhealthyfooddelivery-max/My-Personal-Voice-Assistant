@@ -202,3 +202,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private EditText inp(String h) {
+        EditText e = new EditText(this); e.setHint(h); e.setHintTextColor(Color.GRAY); e.setTextColor(Color.WHITE); e.setTextSize(13); e.setPadding(24, 18, 24, 18);
+        GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor("#0B0F19")); g.setCornerRadius(20f); g.setStroke(2, Color.parseColor("#334155")); e.setBackground(g);
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 6, 0, 10); e.setLayoutParams(p); return e;
+    }
+
+    private void btn(LinearLayout p, String t, String c, android.view.View.OnClickListener l) {
+        Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setAllCaps(false);
+        GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(24f); b.setBackground(g);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, 105); lp.setMargins(0, 10, 0, 6); b.setLayoutParams(lp);
+        b.setOnClickListener(l); p.addView(b);
+    }
+
+    private void setClock(int m) { prefs.edit().putInt("clock_interval", m).apply(); Toast.makeText(this, "সেট হয়েছে", Toast.LENGTH_SHORT).show(); }
+    private void setLang(String c) { prefs.edit().putString("voice_lang", c).apply(); SystemEventReceiver.speak(this, "ভয়েস পরিবর্তন হয়েছে"); }
+    private void setMale(boolean m) { prefs.edit().putBoolean("voice_male", m).apply(); SystemEventReceiver.speak(this, m ? "ছেলে কণ্ঠ" : "মেয়ে কণ্ঠ"); }
+    private int getBat() { Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); return i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, 100) : 100; }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req == 202 && res == RESULT_OK && data != null && data.getData() != null) {
+            try {
+                InputStream in = getContentResolver().openInputStream(data.getData());
+                FileOutputStream out = new FileOutputStream(new File(getExternalFilesDir(null), "ramadan.txt"));
+                byte[] buf = new byte; int len;
+                while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
+                in.close(); out.close();
+                Toast.makeText(this, "রমজান ফাইল যুক্ত হয়েছে!", Toast.LENGTH_SHORT).show();
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private void reqPerms() {
+        List<String> p = new ArrayList<>();
+        p.add(Manifest.permission.RECEIVE_SMS); p.add(Manifest.permission.READ_SMS); p.add(Manifest.permission.READ_PHONE_STATE); p.add(Manifest.permission.CALL_PHONE); p.add(Manifest.permission.READ_CONTACTS);
+        if (Build.VERSION.SDK_INT >= 33) p.add(Manifest.permission.POST_NOTIFICATIONS);
+        String[] a = new String[p.size()];
+        for (int i = 0; i < p.size(); i++) a[i] = p.get(i);
+        ActivityCompat.requestPermissions(this, a, 101);
+    }
+}
