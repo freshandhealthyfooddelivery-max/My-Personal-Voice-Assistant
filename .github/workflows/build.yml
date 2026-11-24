@@ -15,15 +15,28 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Auto-Fix Clipboard Brackets & Manifest
+      - name: Generate Premium Icon & Manifest
         run: |
           python3 -c '
+          import os
+          os.makedirs("app/src/main/res/drawable", exist_ok=True)
           w = "andr" + "oid"
           a = w + chr(58)
           lb = chr(91)
           rb = chr(93)
+
+          icon_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns{chr(58)}{w}="http://schemas.{w}.com/apk/res/{w}" {a}width="108dp" {a}height="108dp" {a}viewportWidth="108" {a}viewportHeight="108">
+              <path {a}fillColor="#0B0F19" {a}pathData="M0,0h108v108h-108z"/>
+              <path {a}fillColor="#1E293B" {a}pathData="M54,14 A40,40 0 1,1 53.9,14 Z"/>
+              <path {a}fillColor="#38BDF8" {a}pathData="M50,32h8v44h-8z M36,42h8v24h-8z M64,42h8v24h-8z M22,48h8v12h-8z M78,48h8v12h-8z"/>
+          </vector>"""
+          open("app/src/main/res/drawable/ic_nahim_logo.xml", "w").write(icon_xml)
+
           xml = f"""<?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns{chr(58)}{w}="http://schemas.{w}.com/apk/res/{w}">
+              <uses-permission {a}name="{w}.permission.INTERNET" />
+              <uses-permission {a}name="{w}.permission.RECORD_AUDIO" />
               <uses-permission {a}name="{w}.permission.RECEIVE_BOOT_COMPLETED" />
               <uses-permission {a}name="{w}.permission.RECEIVE_SMS" />
               <uses-permission {a}name="{w}.permission.READ_SMS" />
@@ -35,14 +48,14 @@ jobs:
               <uses-permission {a}name="{w}.permission.WAKE_LOCK" />
               <uses-permission {a}name="{w}.permission.MODIFY_AUDIO_SETTINGS" />
               <uses-permission {a}name="{w}.permission.ACCESS_NOTIFICATION_POLICY" />
-              <application {a}allowBackup="true" {a}label="Voice Assistant Pro" {a}supportsRtl="true" {a}theme="@style/Theme.AppCompat.Light.DarkActionBar">
+              <application {a}allowBackup="true" {a}icon="@drawable/ic_nahim_logo" {a}label="AI Voice Pro" {a}supportsRtl="true" {a}theme="@style/Theme.AppCompat.NoActionBar">
                   <activity {a}name=".MainActivity" {a}exported="true">
                       <intent-filter>
                           <action {a}name="{w}.intent.action.MAIN" />
                           <category {a}name="{w}.intent.category.LAUNCHER" />
                       </intent-filter>
                   </activity>
-                  <service {a}name=".AssistantTileService" {a}exported="true" {a}icon="@{w}{chr(58)}drawable/ic_btn_speak_now" {a}label="Voice Assistant" {a}permission="{w}.permission.BIND_QUICK_SETTINGS_TILE">
+                  <service {a}name=".AssistantTileService" {a}exported="true" {a}icon="@drawable/ic_nahim_logo" {a}label="Voice Assistant" {a}permission="{w}.permission.BIND_QUICK_SETTINGS_TILE">
                       <intent-filter>
                           <action {a}name="{w}.service.quicksettings.action.QS_TILE" />
                       </intent-filter>
@@ -67,15 +80,6 @@ jobs:
               </application>
           </manifest>"""
           open("app/src/main/AndroidManifest.xml", "w").write(xml)
-
-          p = "app/src/main/java/com/personal/voiceassistant/"
-          s = open(p + "SystemEventReceiver.java").read()
-          s = s.replace("(byte[]) pdus;", f"(byte{lb}{rb}) pdus{lb}0{rb};").replace("(byte) pdus;", f"(byte{lb}{rb}) pdus{lb}0{rb};")
-          open(p + "SystemEventReceiver.java", "w").write(s)
-
-          m = open(p + "MainActivity.java").read()
-          m = m.replace("byte[] buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};").replace("byte buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};")
-          open(p + "MainActivity.java", "w").write(m)
           '
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
