@@ -34,3 +34,16 @@ jobs:
           <div style="margin-top:14px;font-size:12px;color:#94a3b8">AI Voice Language & Gender</div>
           <div class="chips"><div class="chip" onclick="setV('bn')">বাংলা</div><div class="chip" onclick="setV('en_uk')">UK Eng</div><div class="chip" onclick="setV('hi')">हिन्दी</div><div class="chip" onclick="setV('ar')">العربية</div></div>
           <div class="chips"><div class="chip" onclick="setG(false)">👩 Female</div><div class="chip" onclick="setG(true)">👨 Male</div></div>
+                    EOF
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+      - name: Build Debug APK
+        run: gradle assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nahim-AI-Flagship-v5
+          path: "**/app-debug.apk"
+
