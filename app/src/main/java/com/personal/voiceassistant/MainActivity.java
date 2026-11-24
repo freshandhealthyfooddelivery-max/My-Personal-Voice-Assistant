@@ -126,4 +126,4 @@ public class MainActivity extends AppCompatActivity {
             pill(r1, "1h", "#2563EB", x -> prefs.edit().putInt("clock_interval", 60).apply());
             pill(r1, "Off", "#334155", x -> prefs.edit().putInt("clock_interval", 0).apply());
 }
-        }
+        }}
