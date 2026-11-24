@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(circle at 20% 10%,#0f1e3d 0%,#040711 55%,#02040a 100%);color:#f8fafc;min-height:100vh;padding:20px 16px 40px}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.brand h1{font-size:24px;font-weight:800;background:linear-gradient(90deg,#fff,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand p{font-size:11px;color:#38bdf8;font-weight:600;letter-spacing:1px;margin-top:2px}
+.lang-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600}
+.glass{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:26px;padding:18px;margin-bottom:16px;backdrop-filter:blur(20px)}
+.orb-wrap{text-align:center;padding:14px 0}
+.orb{width:110px;height:110px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#2563eb,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;box-shadow:0 0 35px rgba(56,189,248,0.45);animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.row:last-child{border:none}
+.lbl{flex:1;font-size:14px;font-weight:500}
+.sw{position:relative;width:48px;height:28px}.sw input{opacity:0;width:0;height:0}
+.sl{position:absolute;inset:0;background:#1e293b;border-radius:30px;transition:.3s}
+.sl:before{content:'';position:absolute;height:22px;width:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.sl{background:linear-gradient(90deg,#2563eb,#38bdf8)}input:checked+.sl:before{transform:translateX(20px)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.tile{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:22px;padding:16px}
+.tile h3{font-size:14px;margin-top:8px;font-weight:600}.tile p{font-size:11px;color:#94a3b8;margin-top:3px}
+.page{display:none}.page.active{display:block}
+.back{display:inline-block;background:rgba(255,255,255,0.08);padding:8px 14px;border-radius:16px;font-size:13px;font-weight:600;margin-bottom:16px}
+.btn{width:100%;padding:14px;border:none;border-radius:16px;color:#fff;font-size:14px;font-weight:600;margin-top:10px;background:linear-gradient(90deg,#2563eb,#3b82f6)}
+input[type=text],input[type=number]{width:100%;padding:13px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.4);color:#fff;margin-top:8px;font-size:14px}
+.chips{display:flex;gap:8px;margin-top:10px}.chip{flex:1;padding:10px;border-radius:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="brand"><h1>Nahim AI Pro</h1><p>✦ CRAFTED BY NAHIM • ULTRA GLASS OS</p></div><button class="lang-btn" onclick="toggleLang()" id="lBtn">English</button></div>
+
+<div id="home" class="page active">
+  <div class="glass orb-wrap">
+    <div class="orb" onclick="NahimCore.action('voice_ask')">
+      <svg width="42" height="42" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+    </div>
+    <div style="font-size:15px;font-weight:700" data-bn="কথা বলতে অরবে চাপ দিন" data-en="Tap Orb to Speak">কথা বলতে অরবে চাপ দিন</div>
+    <div style="font-size:11px;color:#38bdf8;margin-top:4px" id="batTxt">⚡ Battery: 100%</div>
+    <div class="row" style="margin-top:14px"><div class="lbl" style="text-align:left" data-bn="মাস্টার এআই ইঞ্জিন" data-en="Master AI Engine">মাস্টার এআই ইঞ্জিন</div><label class="sw"><input type="checkbox" id="master_switch" onchange="saveB(this)"><span class="sl"></span></label></div>
+  </div>
+
+  <div class="grid">
+    <div class="tile" onclick="openP('p_comm')"><div style="font-size:22px">📞</div><h3 data-bn="কল ও মেসেজ" data-en="Calls & Messages">কল ও মেসেজ</h3><p data-bn="অটো-কল, SMS ও নোটিফিকেশন" data-en="Auto-dial, SMS & Alerts">অটো-কল, SMS ও নোটিফিকেশন</p></div>
+    <div class="tile" onclick="openP('p_sec')"><div style="font-size:22px">🛡️</div><h3 data-bn="ব্যাটারি ও নিরাপত্তা" data-en="Power & Guard">ব্যাটারি ও নিরাপত্তা</h3><p data-bn="চার্জ অ্যালার্ট, সাইরেন ও টর্চ" data-en="Battery, Siren & Shake">চার্জ অ্যালার্ট, সাইরেন ও টর্চ</p></div>
+    <div class="tile" onclick="openP('p_cal')"><div style="font-size:22px">🕌</div><h3 data-bn="ক্যালেন্ডার ও নামাজ" data-en="Calendar & Islam">ক্যালেন্ডার ও নামাজ</h3><p data-bn="বাংলা, আরবি হিজরি ও ওয়াক্ত" data-en="Bangla, Hijri & Namaz">বাংলা, আরবি হিজরি ও ওয়াক্ত</p></div>
+    <div class="tile" onclick="openP('p_sys')"><div style="font-size:22px">⚙️</div><h3 data-bn="ভয়েস ও সিস্টেম" data-en="Voice & System">ভয়েস ও সিস্টেম</h3><p data-bn="ভাষা, কণ্ঠ, ঘড়ি ও পারমিশন" data-en="Language, Clock & Perms">ভাষা, কণ্ঠ, ঘড়ি ও পারমিশন</p></div>
+  </div>
+
+  <div class="glass">
+    <div style="font-size:12px;color:#94a3b8" data-bn="তাৎক্ষণিক ভয়েস রিপোর্ট" data-en="Instant Voice Reports">তাৎক্ষণিক ভয়েস রিপোর্ট</div>
+    <div class="chips"><div class="chip" onclick="NahimCore.action('bangla_date')">📅 বাংলা তারিখ</div><div class="chip" onclick="NahimCore.action('arabic_date')">🌙 আরবি হিজরি</div><div class="chip" onclick="NahimCore.action('weather')">🌦️ আবহাওয়া</div></div>
+    <button class="btn" onclick="NahimCore.action('lock_assist')" data-bn="⚡ পাওয়ার বাটনে ভয়েস অ্যাসিস্ট্যান্ট সেট করুন" data-en="⚡ Set Lock-Screen Power Assistant">⚡ পাওয়ার বাটনে ভয়েস অ্যাসিস্ট্যান্ট সেট করুন</button>
+  </div>
+</div>
+
+<div id="p_comm" class="page"><div class="back" onclick="openP('home')">← Back</div><div class="glass">
+  <div class="row"><div class="lbl" data-bn="ইনকামিং কল নাম/নাম্বার বলা" data-en="Call Name Announcer">ইনকামিং কল নাম/নাম্বার বলা</div><label class="sw"><input type="checkbox" id="call_switch" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="বাইক রাইডিং মোড (অটো স্পিকার)" data-en="Bike Riding Auto-Speaker">বাইক রাইডিং মোড (অটো স্পিকার)</div><label class="sw"><input type="checkbox" id="riding_mode" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="সাইলেন্ট করলে ১ ঘণ্টা পর সাউন্ড অন" data-en="Auto Un-Silent (1h)">সাইলেন্ট করলে ১ ঘণ্টা পর সাউন্ড অন</div><label class="sw"><input type="checkbox" id="auto_unsilent" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="SMS প্রেরকের নাম বলা" data-en="SMS Sender Announcer">SMS প্রেরকের নাম বলা</div><label class="sw"><input type="checkbox" id="sms_switch" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="সম্পূর্ণ SMS পড়ে শোনানো" data-en="Read Full SMS">সম্পূর্ণ SMS পড়ে শোনানো</div><label class="sw"><input type="checkbox" id="sms_full_read" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="সব অ্যাপের নোটিফিকেশন বলা" data-en="App Notifications">সব অ্যাপের নোটিফিকেশন বলা</div><label class="sw"><input type="checkbox" id="app_notif_switch" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="হেডফোন প্রাইভেসি মোড" data-en="Headphone Privacy">হেডফোন প্রাইভেসি মোড</div><label class="sw"><input type="checkbox" id="headphone_privacy" onchange="saveB(this)"><span class="sl"></span></label></div>
+</div><div class="glass"><div style="font-size:13px;font-weight:600">Auto-Call Redial Loop</div><input type="text" id="cNum" placeholder="017..."><input type="number" id="cSec" placeholder="Seconds (15)"><button class="btn" style="background:#10b981" onclick="runCall()">▶ Start Auto-Call</button><button class="btn" style="background:#ef4444" onclick="NahimCore.stopAutoCall()">⏹ Stop Auto-Call</button></div></div>
+
+<div id="p_sec" class="page"><div class="back" onclick="openP('home')">← Back</div><div class="glass">
+  <div class="row"><div class="lbl" data-bn="চার্জার ও ব্যাটারি % বলা" data-en="Battery % Alerts">চার্জার ও ব্যাটারি % বলা</div><label class="sw"><input type="checkbox" id="battery_switch" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="১০০% চার্জ পূর্ণ হলে অ্যালার্ম" data-en="100% Charge Alarm">১০০% চার্জ পূর্ণ হলে অ্যালার্ম</div><label class="sw"><input type="checkbox" id="full_charge_alarm" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="চার্জার চুরি সাইরেন" data-en="Anti-Theft Siren">চার্জার চুরি সাইরেন</div><label class="sw"><input type="checkbox" id="theft_alarm" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="ফোন ঝাঁকালে টর্চলাইট" data-en="Shake for Torch">ফোন ঝাঁকালে টর্চলাইট</div><label class="sw"><input type="checkbox" id="shake_torch" onchange="saveB(this)"><span class="sl"></span></label></div>
+  <div class="row"><div class="lbl" data-bn="ইন্টারনেট সংযোগ অ্যালার্ট" data-en="Network Alert">ইন্টারনেট সংযোগ অ্যালার্ট</div><label class="sw"><input type="checkbox" id="network_alert" onchange="saveB(this)"><span class="sl"></span></label></div>
+</div></div>
+
+<div id="p_cal" class="page"><div class="back" onclick="openP('home')">← Back</div><div class="glass">
