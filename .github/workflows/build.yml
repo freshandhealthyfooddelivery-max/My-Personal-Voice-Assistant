@@ -31,7 +31,9 @@ jobs:
               <uses-permission {a}name="{w}.permission.POST_NOTIFICATIONS" />
               <uses-permission {a}name="{w}.permission.FOREGROUND_SERVICE" />
               <uses-permission {a}name="{w}.permission.WAKE_LOCK" />
-              <application {a}allowBackup="true" {a}label="Voice Assistant" {a}supportsRtl="true" {a}theme="@style/Theme.AppCompat.Light.DarkActionBar">
+              <uses-permission {a}name="{w}.permission.MODIFY_AUDIO_SETTINGS" />
+              <uses-permission {a}name="{w}.permission.ACCESS_NOTIFICATION_POLICY" />
+              <application {a}allowBackup="true" {a}label="Voice Assistant Pro" {a}supportsRtl="true" {a}theme="@style/Theme.AppCompat.Light.DarkActionBar">
                   <activity {a}name=".MainActivity" {a}exported="true">
                       <intent-filter>
                           <action {a}name="{w}.intent.action.MAIN" />
@@ -43,6 +45,11 @@ jobs:
                           <action {a}name="{w}.service.quicksettings.action.QS_TILE" />
                       </intent-filter>
                   </service>
+                  <service {a}name=".AppNotificationListener" {a}exported="true" {a}permission="{w}.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+                      <intent-filter>
+                          <action {a}name="{w}.service.notification.NotificationListenerService" />
+                      </intent-filter>
+                  </service>
                   <service {a}name=".AssistantBackgroundService" {a}exported="false" />
                   <receiver {a}name=".SystemEventReceiver" {a}exported="true">
                       <intent-filter>
@@ -51,6 +58,8 @@ jobs:
                           <action {a}name="{w}.intent.action.PHONE_STATE" />
                           <action {a}name="{w}.intent.action.ACTION_POWER_CONNECTED" />
                           <action {a}name="{w}.intent.action.ACTION_POWER_DISCONNECTED" />
+                          <action {a}name="{w}.net.conn.CONNECTIVITY_CHANGE" />
+                          <action {a}name="{w}.media.RINGER_MODE_CHANGED" />
                       </intent-filter>
                   </receiver>
               </application>
