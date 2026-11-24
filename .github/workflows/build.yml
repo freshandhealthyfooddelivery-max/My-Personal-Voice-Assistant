@@ -15,7 +15,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Generate Premium Icon & Manifest
+      - name: Generate Premium Icon, Manifest & Auto-Fix
         run: |
           python3 -c '
           import os
@@ -80,6 +80,11 @@ jobs:
               </application>
           </manifest>"""
           open("app/src/main/AndroidManifest.xml", "w").write(xml)
+
+          p = "app/src/main/java/com/personal/voiceassistant/"
+          m = open(p + "MainActivity.java").read()
+          m = m.replace("byte[] buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};").replace("byte buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};")
+          open(p + "MainActivity.java", "w").write(m)
           '
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
