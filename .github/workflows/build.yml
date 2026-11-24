@@ -15,7 +15,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Generate Manifest, Fix Brackets & Inject JS
+      - name: Build Complete Glass OS with All Pages
         run: |
           python3 -c '
           import os
@@ -36,28 +36,17 @@ jobs:
           ab = open(p + "AssistantBackgroundService.java").read().replace("e.values*e.values + e.values*e.values + e.values*e.values", f"e.values{lb}0{rb}*e.values{lb}0{rb} + e.values{lb}1{rb}*e.values{lb}1{rb} + e.values{lb}2{rb}*e.values{lb}2{rb}").replace("cm.getCameraIdList(), torch", f"cm.getCameraIdList(){lb}0{rb}, torch")
           open(p + "AssistantBackgroundService.java", "w").write(ab)
           hp = "app/src/main/assets/ui.html"
-          html = open(hp).read().split("<script>")[0]
-          js = """<script>
-          let en=false;
-          const keys=["master_switch","call_switch","riding_mode","auto_unsilent","sms_switch","sms_full_read","app_notif_switch","headphone_privacy","battery_switch","full_charge_alarm","theft_alarm","shake_torch","network_alert","namaz_alarm","friday_alert","sleep_mode","morning_brief"];
-          window.onload=function(){try{keys.forEach(function(k){var e=document.getElementById(k);if(e)e.checked=NahimCore.getBool(k);});document.getElementById("batTxt").innerText="⚡ Live Battery: "+NahimCore.getBattery()+"%";}catch(err){}};
-          function saveB(el){try{NahimCore.setBool(el.id,el.checked);}catch(e){}}
-          function openP(id){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});document.getElementById(id).classList.add("active");window.scrollTo(0,0);}
-          function toggleLang(){en=!en;document.getElementById("lBtn").innerText=en?"বাংলা":"English";document.querySelectorAll("[data-bn]").forEach(function(el){el.innerText=en?el.getAttribute("data-en"):el.getAttribute("data-bn");});}
-          function setV(l){try{NahimCore.setStr("voice_lang",l);NahimCore.action("test_voice");}catch(e){}}
-          function setG(m){try{NahimCore.setBool("voice_male",m);NahimCore.action("test_voice");}catch(e){}}
-          function runCall(){var n=document.getElementById("cNum").value,s=parseInt(document.getElementById("cSec").value);if(n&&s)NahimCore.startAutoCall(n,s);}
-          </script></body></html>"""
-          open(hp, "w").write(html.replace("</body>","").replace("</html>","") + js)
-          '
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.4'
-      - name: Build Debug APK
-        run: gradle assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Nahim-AI-Flagship-v5
-          path: "**/app-debug.apk"
+          html = open(hp).read().split("<div id=\"p_cal\"")
+          extra_pages = """<div id="p_cal" class="page"><div class="back" onclick="openP('home')">← Back</div><div class="glass">
+          <div class="row"><div class="lbl" data-bn="৫ ওয়াক্ত নামাজের অ্যালার্ম" data-en="5 Waqt Namaz Alarm">৫ ওয়াক্ত নামাজের অ্যালার্ম</div><label class="sw"><input type="checkbox" id="namaz_alarm" onchange="saveB(this)"><span class="sl"></span></label></div>
+          <div class="row"><div class="lbl" data-bn="প্রতি শুক্রবার সকাল ৮টা বার্তা" data-en="Friday 8AM Alert">প্রতি শুক্রবার সকাল ৮টা বার্তা</div><label class="sw"><input type="checkbox" id="friday_alert" onchange="saveB(this)"><span class="sl"></span></label></div>
+          <button class="btn" onclick="NahimCore.action('pick_ramadan')">📂 Upload Ramadan File (.txt)</button>
+          <button class="btn" onclick="NahimCore.action('pick_bangla')">📂 Upload Bangla Calendar (.txt)</button>
+          <button class="btn" onclick="NahimCore.action('pick_arabic')">📂 Upload Arabic Hijri (.txt)</button>
+          </div></div>
+          <div id="p_sys" class="page"><div class="back" onclick="openP('home')">← Back</div><div class="glass">
+          <div class="row"><div class="lbl" data-bn="রাতের স্লিপ মোড (১২টা-৫টা)" data-en="Night Sleep Mode">রাতের স্লিপ মোড (১২টা-৫টা)</div><label class="sw"><input type="checkbox" id="sleep_mode" onchange="saveB(this)"><span class="sl"></span></label></div>
+          <div class="row"><div class="lbl" data-bn="সকাল ৭টা গুড মর্নিং ব্রিফিং" data-en="7AM Morning Briefing">সকাল ৭টা গুড মর্নিং ব্রিফিং</div><label class="sw"><input type="checkbox" id="morning_brief" onchange="saveB(this)"><span class="sl"></span></label></div>
+          <div style="margin-top:12px;font-size:12px;color:#94a3b8">Speaking Clock Interval</div>
+          <div class="chips"><div class="chip" onclick="NahimCore.setInt('clock_interval',15)">15m</div><div class="chip" onclick="NahimCore.setInt('clock_interval',30)">30m</div><div class="chip" onclick="NahimCore.setInt('clock_interval',60)">1h</div><div class="chip" onclick="NahimCore.setInt('clock_interval',0)">Off</div></div>
+          <div style="margin-top:14px;font-size:12px;color:#94a3b8">AI Voice Language & Gender</div>
