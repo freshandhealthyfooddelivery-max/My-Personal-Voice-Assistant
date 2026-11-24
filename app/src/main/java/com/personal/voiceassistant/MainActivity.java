@@ -59,6 +59,10 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             perms.add(Manifest.permission.POST_NOTIFICATIONS);
         }
-        ActivityCompat.requestPermissions(this, perms.toArray(new String), 101);
+        String[] arr = new String[perms.size()];
+        for (int i = 0; i < perms.size(); i++) {
+            arr[i] = perms.get(i);
+        }
+        ActivityCompat.requestPermissions(this, arr, 101);
     }
 }
