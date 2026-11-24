@@ -10,13 +10,15 @@ import android.media.ToneGenerator;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.speech.tts.TextToSpeech;
 import android.telephony.SmsMessage;
 import android.telephony.TelephonyManager;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 public class SystemEventReceiver extends BroadcastReceiver {
@@ -42,25 +44,23 @@ public class SystemEventReceiver extends BroadcastReceiver {
                 speak(context, "চার্জার রিমুভড");
             }
         } else if (action.equals("android.provider.Telephony.SMS_RECEIVED")) {
-            Bundle bundle = intent.getExtras();
-            if (bundle != null) {
-                Object[] pdus = (Object[]) bundle.get("pdus");
-                if (pdus != null && pdus.length > 0) {
-                    SmsMessage msg = SmsMessage.createFromPdu((byte[]) pdus);
-                    String sender = msg.getDisplayOriginatingAddress();
-                    String body = msg.getMessageBody();
+            SmsMessage[] msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
+            if (msgs != null && msgs.length > 0) {
+                List<SmsMessage> msgList = Arrays.asList(msgs);
+                SmsMessage msg = msgList.get(0);
+                String sender = msg.getDisplayOriginatingAddress();
+                String body = msg.getMessageBody();
 
-                    if (body != null && body.trim().equalsIgnoreCase("FINDMYPHONE")) {
-                        triggerLoudAlarm(context, "আমি এখানে আছি, আপনার ফোন এখানে");
-                        return;
-                    }
+                if (body != null && body.trim().equalsIgnoreCase("FINDMYPHONE")) {
+                    triggerLoudAlarm(context, "আমি এখানে আছি, আপনার ফোন এখানে");
+                    return;
+                }
 
-                    if (prefs.getBoolean("sms_switch", true)) {
-                        if (prefs.getBoolean("sms_full_read", false)) {
-                            speak(context, "মেসেজ ফ্রম " + sender + ". " + body);
-                        } else {
-                            speak(context, "মেসেজ ফ্রম " + sender + ", ইউ ক্যান রিড ইট অর ইগনোর");
-                        }
+                if (prefs.getBoolean("sms_switch", true)) {
+                    if (prefs.getBoolean("sms_full_read", false)) {
+                        speak(context, "মেসেজ ফ্রম " + sender + ". " + body);
+                    } else {
+                        speak(context, "মেসেজ ফ্রম " + sender + ", ইউ ক্যান রিড ইট অর ইগনোর");
                     }
                 }
             }
@@ -138,4 +138,4 @@ public class SystemEventReceiver extends BroadcastReceiver {
             }
         });
     }
-}
+                                                                                              }
