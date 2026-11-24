@@ -15,7 +15,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Generate Clean Manifest
+      - name: Generate Full Manifest
         run: |
           python3 -c '
           w = "andr" + "oid"
@@ -29,6 +29,8 @@ jobs:
               <uses-permission {a}name="{w}.permission.CALL_PHONE" />
               <uses-permission {a}name="{w}.permission.READ_CONTACTS" />
               <uses-permission {a}name="{w}.permission.POST_NOTIFICATIONS" />
+              <uses-permission {a}name="{w}.permission.FOREGROUND_SERVICE" />
+              <uses-permission {a}name="{w}.permission.WAKE_LOCK" />
               <application {a}allowBackup="true" {a}label="Voice Assistant" {a}supportsRtl="true" {a}theme="@style/Theme.AppCompat.Light.DarkActionBar">
                   <activity {a}name=".MainActivity" {a}exported="true">
                       <intent-filter>
@@ -41,6 +43,16 @@ jobs:
                           <action {a}name="{w}.service.quicksettings.action.QS_TILE" />
                       </intent-filter>
                   </service>
+                  <service {a}name=".AssistantBackgroundService" {a}exported="false" />
+                  <receiver {a}name=".SystemEventReceiver" {a}exported="true">
+                      <intent-filter>
+                          <action {a}name="{w}.intent.action.BOOT_COMPLETED" />
+                          <action {a}name="{w}.provider.Telephony.SMS_RECEIVED" />
+                          <action {a}name="{w}.intent.action.PHONE_STATE" />
+                          <action {a}name="{w}.intent.action.ACTION_POWER_CONNECTED" />
+                          <action {a}name="{w}.intent.action.ACTION_POWER_DISCONNECTED" />
+                      </intent-filter>
+                  </receiver>
               </application>
           </manifest>"""
           open("app/src/main/AndroidManifest.xml", "w").write(xml)
@@ -55,4 +67,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MyVoiceAssistant-APK
-          path: app/build/outputs/apk/debug/app-
+          path: "**/app-debug.apk"
