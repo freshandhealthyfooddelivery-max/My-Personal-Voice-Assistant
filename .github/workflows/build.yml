@@ -84,6 +84,9 @@ jobs:
           p = "app/src/main/java/com/personal/voiceassistant/"
           m = open(p + "MainActivity.java").read()
           m = m.replace("byte[] buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};").replace("byte buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};")
+          diff = m.count("{") - m.count("}")
+          if diff > 0:
+              m = m + ("}" * diff)
           open(p + "MainActivity.java", "w").write(m)
           '
       - name: Setup Gradle
