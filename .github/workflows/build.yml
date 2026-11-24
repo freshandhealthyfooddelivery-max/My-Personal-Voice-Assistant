@@ -15,11 +15,13 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Generate Full Manifest
+      - name: Auto-Fix Clipboard Brackets & Manifest
         run: |
           python3 -c '
           w = "andr" + "oid"
           a = w + chr(58)
+          lb = chr(91)
+          rb = chr(93)
           xml = f"""<?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns{chr(58)}{w}="http://schemas.{w}.com/apk/res/{w}">
               <uses-permission {a}name="{w}.permission.RECEIVE_BOOT_COMPLETED" />
@@ -65,6 +67,15 @@ jobs:
               </application>
           </manifest>"""
           open("app/src/main/AndroidManifest.xml", "w").write(xml)
+
+          p = "app/src/main/java/com/personal/voiceassistant/"
+          s = open(p + "SystemEventReceiver.java").read()
+          s = s.replace("(byte[]) pdus;", f"(byte{lb}{rb}) pdus{lb}0{rb};").replace("(byte) pdus;", f"(byte{lb}{rb}) pdus{lb}0{rb};")
+          open(p + "SystemEventReceiver.java", "w").write(s)
+
+          m = open(p + "MainActivity.java").read()
+          m = m.replace("byte[] buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};").replace("byte buf = new byte;", f"byte{lb}{rb} buf = new byte{lb}1024{rb};")
+          open(p + "MainActivity.java", "w").write(m)
           '
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
