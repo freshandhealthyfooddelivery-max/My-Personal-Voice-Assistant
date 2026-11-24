@@ -17,7 +17,7 @@ jobs:
           distribution: 'temurin'
       - name: Clean & Rebuild UI Pages
         run: |
-          python3 -c '
+          python3 - << 'PYEOF'
           import os
           os.makedirs("app/src/main/res/drawable", exist_ok=True)
           w = "andr" + "oid"
@@ -36,8 +36,8 @@ jobs:
           ab = open(p + "AssistantBackgroundService.java").read().replace("e.values*e.values + e.values*e.values + e.values*e.values", f"e.values{lb}0{rb}*e.values{lb}0{rb} + e.values{lb}1{rb}*e.values{lb}1{rb} + e.values{lb}2{rb}*e.values{lb}2{rb}").replace("cm.getCameraIdList(), torch", f"cm.getCameraIdList(){lb}0{rb}, torch")
           open(p + "AssistantBackgroundService.java", "w").write(ab)
           hp = "app/src/main/assets/ui.html"
-          top_html = open(hp).read().split("<div id=\"p_cal\"")[0].split("<script>")[0]
-          bottom_html = """<div id="p_cal" class="page"><div class="back" onclick="openP('home')">← Back</div><div class="glass">
+          top_html = open(hp).read().split('<div id="p_cal"').split('<script>')
+          bottom_html = f"""<div id="p_cal" class="page"><div class="back" onclick="openP('home')">← Back</div><div class="glass">
           <div class="row"><div class="lbl" data-bn="৫ ওয়াক্ত নামাজের অ্যালার্ম" data-en="5 Waqt Namaz Alarm">৫ ওয়াক্ত নামাজের অ্যালার্ম</div><label class="sw"><input type="checkbox" id="namaz_alarm" onchange="saveB(this)"><span class="sl"></span></label></div>
           <div class="row"><div class="lbl" data-bn="প্রতি শুক্রবার সকাল ৮টা বার্তা" data-en="Friday 8AM Alert">প্রতি শুক্রবার সকাল ৮টা বার্তা</div><label class="sw"><input type="checkbox" id="friday_alert" onchange="saveB(this)"><span class="sl"></span></label></div>
           <button class="btn" onclick="NahimCore.action('pick_ramadan')">📂 Upload Ramadan File (.txt)</button>
