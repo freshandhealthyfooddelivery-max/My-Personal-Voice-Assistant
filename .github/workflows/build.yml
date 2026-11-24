@@ -15,17 +15,35 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Fix Manifest
+      - name: Generate Clean Manifest
         run: |
-          sed -i 's/ <uses-permission name=/ <uses-permission android:name=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ name=/ android:name=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ exported=/ android:exported=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ allowBackup=/ android:allowBackup=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ label=/ android:label=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ supportsRtl=/ android:supportsRtl=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ theme=/ android:theme=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ icon=/ android:icon=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/ permission=/ android:permission=/g' app/src/main/AndroidManifest.xml
+          python3 -c '
+          a = "android" + chr(58)
+          xml = f"""<?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns{chr(58)}android="http://android.com">
+              <uses-permission {a}name="android.permission.RECEIVE_BOOT_COMPLETED" />
+              <uses-permission {a}name="android.permission.RECEIVE_SMS" />
+              <uses-permission {a}name="android.permission.READ_SMS" />
+              <uses-permission {a}name="android.permission.READ_PHONE_STATE" />
+              <uses-permission {a}name="android.permission.CALL_PHONE" />
+              <uses-permission {a}name="android.permission.READ_CONTACTS" />
+              <uses-permission {a}name="android.permission.POST_NOTIFICATIONS" />
+              <application {a}allowBackup="true" {a}label="Voice Assistant" {a}supportsRtl="true" {a}theme="@style/Theme.AppCompat.Light.DarkActionBar">
+                  <activity {a}name=".MainActivity" {a}exported="true">
+                      <intent-filter>
+                          <action {a}name="android.intent.action.MAIN" />
+                          <category {a}name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+                  <service {a}name=".AssistantTileService" {a}exported="true" {a}icon="@android:drawable/ic_btn_speak_now" {a}label="Voice Assistant" {a}permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+                      <intent-filter>
+                          <action {a}name="android.service.quicksettings.action.QS_TILE" />
+                      </intent-filter>
+                  </service>
+              </application>
+          </manifest>"""
+          open("app/src/main/AndroidManifest.xml", "w").write(xml)
+          '
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
