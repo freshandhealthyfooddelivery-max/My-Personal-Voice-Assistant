@@ -15,7 +15,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.view.Gravity;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -33,188 +32,173 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private SharedPreferences prefs;
-    private static final int PICK_RAMADAN_FILE = 202;
     private TextView statusBadge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
-        Window window = getWindow();
-        window.setStatusBarColor(Color.parseColor("#0B0F19"));
-
+        getWindow().setStatusBarColor(Color.parseColor("#0B0F19"));
         prefs = getSharedPreferences("AssistantPrefs", MODE_PRIVATE);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setBackgroundColor(Color.parseColor("#0B0F19"));
-        scroll.setFillViewport(true);
-
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(42, 60, 42, 70);
-
-        // --- TOP HEADER ---
-        TextView subtitle = new TextView(this);
-        subtitle.setText("ULTIMATE PERSONAL AI SYSTEM");
-        subtitle.setTextColor(Color.parseColor("#38BDF8"));
-        subtitle.setTextSize(11);
-        subtitle.setTypeface(null, Typeface.BOLD);
-        subtitle.setLetterSpacing(0.15f);
-        root.addView(subtitle);
+        root.setPadding(40, 50, 40, 60);
 
         TextView title = new TextView(this);
         title.setText("Voice Assistant Pro");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(26);
+        title.setTextSize(25);
         title.setTypeface(null, Typeface.BOLD);
-        title.setPadding(0, 4, 0, 32);
+        title.setPadding(0, 0, 0, 25);
         root.addView(title);
 
-        // --- HERO MASTER CARD ---
-        LinearLayout heroCard = createCard("#1E293B", "#38BDF8");
-        LinearLayout heroTop = new LinearLayout(this);
-        heroTop.setOrientation(LinearLayout.HORIZONTAL);
-        heroTop.setGravity(Gravity.CENTER_VERTICAL);
-
+        // Hero Card
+        LinearLayout hero = card("#1E293B", "#38BDF8");
+        LinearLayout top = new LinearLayout(this);
+        top.setGravity(Gravity.CENTER_VERTICAL);
         statusBadge = new TextView(this);
-        boolean isMasterOn = prefs.getBoolean("master_switch", false);
-        updateStatusBadge(isMasterOn);
-        heroTop.addView(statusBadge);
+        boolean active = prefs.getBoolean("master_switch", false);
+        updateBadge(active);
+        top.addView(statusBadge);
+        TextView bat = new TextView(this);
+        bat.setText("   ⚡ " + getBat() + "%");
+        bat.setTextColor(Color.parseColor("#94A3B8"));
+        top.addView(bat);
+        hero.addView(top);
+        sw(hero, "মাস্টার পাওয়ার সুইচ (অন/অফ)", "master_switch", false, true);
+        root.addView(hero);
 
-        TextView batInfo = new TextView(this);
-        batInfo.setText("   ⚡ Battery: " + getBatteryPercentage() + "%");
-        batInfo.setTextColor(Color.parseColor("#94A3B8"));
-        batInfo.setTextSize(13);
-        heroTop.addView(batInfo);
-        heroCard.addView(heroTop);
+        // Card 1: SMS & Notif
+        LinearLayout c1 = card("#131A2A", "#1E293B");
+        hdr(c1, "💬 মেসেজ ও নোটিফিকেশন");
+        sw(c1, "SMS ভয়েস অ্যানাউন্সার", "sms_switch", true, false);
+        sw(c1, "সম্পূর্ণ SMS পড়ে শোনানো", "sms_full_read", false, false);
+        sw(c1, "সব অ্যাপের নোটিফিকেশন বলা", "app_notif_switch", true, false);
+        sw(c1, "হেডফোন প্রাইভেসি মোড", "headphone_privacy", false, false);
+        root.addView(c1);
 
-        addStyledSwitch(heroCard, "মাস্টার পাওয়ার সুইচ (সিস্টেম অন/অফ)", "master_switch", false, true);
-        root.addView(heroCard);
-
-        // --- CARD 1: SMS, APP NOTIFICATIONS & PRIVACY ---
-        LinearLayout commCard = createCard("#131A2A", "#1E293B");
-        addSectionHeader(commCard, "💬  মেসেজ, নোটিফিকেশন ও প্রাইভেসি");
-        addStyledSwitch(commCard, "SMS ভয়েস অ্যানাউন্সার", "sms_switch", true, false);
-        addStyledSwitch(commCard, "সম্পূর্ণ SMS পড়ে শোনানো (অফ থাকলে শুধু নাম বলবে)", "sms_full_read", false, false);
-        addStyledSwitch(commCard, "সব অ্যাপের নোটিফিকেশন পড়ে শোনানো (FB/WA)", "app_notif_switch", true, false);
-        addStyledSwitch(commCard, "হেডফোন প্রাইভেসি মোড (শুধু ইয়ারফোনে বলবে)", "headphone_privacy", false, false);
-        root.addView(commCard);
-
-        // --- CARD 2: SMART CALL & RIDING MODE ---
-        LinearLayout callCard = createCard("#131A2A", "#1E293B");
-        addSectionHeader(callCard, "📞  স্মার্ট কল ও বাইক রাইডিং মোড");
-        addStyledSwitch(callCard, "ইনকামিং কলের নাম/নাম্বার বলা", "call_switch", true, false);
-        addStyledSwitch(callCard, "হ্যান্ডস-ফ্রি রাইডিং মোড (কল ধরলেই অটো স্পিকার)", "riding_mode", false, false);
-        addStyledSwitch(callCard, "সাইলেন্ট করলে ১ ঘণ্টা পর অটো সাউন্ড অন", "auto_unsilent", false, false);
-
-        EditText numInput = createStyledInput("অটো-কল মোবাইল নাম্বার (যেমন: 017...)");
-        callCard.addView(numInput);
-
-        EditText secInput = createStyledInput("কত সেকেন্ড পর কেটে আবার দেবে (যেমন: 10)");
-        callCard.addView(secInput);
-
-        Button startCallBtn = createActionBtn("অটো-কল শুরু করুন", "#10B981");
-        startCallBtn.setOnClickListener(v -> {
-            String num = numInput.getText().toString().trim();
-            String secStr = secInput.getText().toString().trim();
-            if (!num.isEmpty() && !secStr.isEmpty()) {
-                startAutoCallLoop(num, Integer.parseInt(secStr));
-            } else {
-                Toast.makeText(this, "নাম্বার ও সেকেন্ড দিন", Toast.LENGTH_SHORT).show();
+        // Card 2: Call & Riding
+        LinearLayout c2 = card("#131A2A", "#1E293B");
+        hdr(c2, "📞 স্মার্ট কল ও রাইডিং মোড");
+        sw(c2, "ইনকামিং কলের নাম/নাম্বার বলা", "call_switch", true, false);
+        sw(c2, "রাইডিং মোড (অটো স্পিকার)", "riding_mode", false, false);
+        sw(c2, "সাইলেন্ট করলে ১ ঘণ্টা পর সাউন্ড অন", "auto_unsilent", false, false);
+        EditText numIn = inp("অটো-কল নাম্বার (017...)");
+        EditText secIn = inp("কত সেকেন্ড পর কাটবে (10)");
+        c2.addView(numIn);
+        c2.addView(secIn);
+        btn(c2, "অটো-কল শুরু করুন", "#10B981", v -> {
+            String n = numIn.getText().toString().trim();
+            String s = secIn.getText().toString().trim();
+            if (!n.isEmpty() && !s.isEmpty()) {
+                Intent i = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + n));
+                startActivity(i);
+                new Handler(Looper.getMainLooper()).postDelayed(() -> Toast.makeText(this, s + " সেকেন্ড পূর্ণ", Toast.LENGTH_SHORT).show(), Integer.parseInt(s) * 1000L);
             }
         });
-        callCard.addView(startCallBtn);
-        root.addView(callCard);
+        root.addView(c2);
 
-        // --- CARD 3: BATTERY, NETWORK & SECURITY ---
-        LinearLayout batCard = createCard("#131A2A", "#1E293B");
-        addSectionHeader(batCard, "🛡️  পাওয়ার, নেটওয়ার্ক ও নিরাপত্তা");
-        addStyledSwitch(batCard, "চার্জার ও ব্যাটারি পার্সেন্টেজ অ্যালার্ট", "battery_switch", true, false);
-        addStyledSwitch(batCard, "চার্জার চুরি অ্যালার্ম (খুললেই ফুল ভলিউমে বাজবে)", "theft_alarm", false, false);
-        addStyledSwitch(batCard, "Wi-Fi ও মোবাইল ডাটা সংযোগ অ্যালার্ট", "network_alert", false, false);
-        addStyledSwitch(batCard, "মেমোরি ৯০% পূর্ণ হলে স্টোরেজ ওয়ার্নিং", "storage_warn", true, false);
-        root.addView(batCard);
+        // Card 3: Power & Security
+        LinearLayout c3 = card("#131A2A", "#1E293B");
+        hdr(c3, "🛡️ পাওয়ার, নেটওয়ার্ক ও নিরাপত্তা");
+        sw(c3, "চার্জার ও ব্যাটারি অ্যালার্ট", "battery_switch", true, false);
+        sw(c3, "চার্জার চুরি অ্যালার্ম", "theft_alarm", false, false);
+        sw(c3, "Wi-Fi ও ডাটা সংযোগ অ্যালার্ট", "network_alert", false, false);
+        sw(c3, "মেমোরি ৯০% স্টোরেজ ওয়ার্নিং", "storage_warn", true, false);
+        root.addView(c3);
 
-        // --- CARD 4: SPEAKING CLOCK, VOICE & SLEEP MODE ---
-        LinearLayout timeCard = createCard("#131A2A", "#1E293B");
-        addSectionHeader(timeCard, "⏰  স্পিকিং ক্লক, স্লিপ মোড ও ভয়েস");
-        addStyledSwitch(timeCard, "রাতের স্লিপ মোড (রাত ১২টা - ভোর ৫টা চুপ থাকবে)", "sleep_mode", true, false);
-        addStyledSwitch(timeCard, "সকাল ৭টায় গুড মর্নিং ও তারিখ ব্রিফিং", "morning_brief", true, false);
+        // Card 4: Clock & Voice
+        LinearLayout c4 = card("#131A2A", "#1E293B");
+        hdr(c4, "⏰ স্পিকিং ক্লক ও ভয়েস");
+        sw(c4, "রাতের স্লিপ মোড (১২টা - ৫টা)", "sleep_mode", true, false);
+        sw(c4, "সকাল ৭টায় গুড মর্নিং ব্রিফিং", "morning_brief", true, false);
+        LinearLayout r1 = new LinearLayout(this);
+        pill(r1, "১৫ মি.", "#2563EB", v -> setClock(15));
+        pill(r1, "৩০ মি.", "#2563EB", v -> setClock(30));
+        pill(r1, "১ ঘণ্টা", "#2563EB", v -> setClock(60));
+        pill(r1, "বন্ধ", "#334155", v -> setClock(0));
+        c4.addView(r1);
+        LinearLayout r2 = new LinearLayout(this);
+        r2.setPadding(0, 15, 0, 0);
+        pill(r2, "বাংলা", "#3B82F6", v -> setLang("bn"));
+        pill(r2, "UK Eng", "#3B82F6", v -> setLang("en_uk"));
+        pill(r2, "মেয়ে কণ্ঠ", "#DB2777", v -> setMale(false));
+        pill(r2, "ছেলে কণ্ঠ", "#475569", v -> setMale(true));
+        c4.addView(r2);
+        root.addView(c4);
 
-        TextView cSub = new TextView(this);
-        cSub.setText("কতক্ষণ পরপর সময় বলবে:");
-        cSub.setTextColor(Color.parseColor("#94A3B8"));
-        cSub.setTextSize(13);
-        cSub.setPadding(0, 10, 0, 14);
-        timeCard.addView(cSub);
-
-        LinearLayout clockRow = new LinearLayout(this);
-        clockRow.setOrientation(LinearLayout.HORIZONTAL);
-        addPillBtn(clockRow, "১৫ মি.", 15, "#2563EB");
-        addPillBtn(clockRow, "৩০ মি.", 30, "#2563EB");
-        addPillBtn(clockRow, "১ ঘণ্টা", 60, "#2563EB");
-        addPillBtn(clockRow, "বন্ধ", 0, "#334155");
-        timeCard.addView(clockRow);
-
-        TextView lSub = new TextView(this);
-        lSub.setText("ভয়েস ভাষা ও কণ্ঠ নির্বাচন করুন:");
-        lSub.setTextColor(Color.parseColor("#94A3B8"));
-        lSub.setTextSize(13);
-        lSub.setPadding(0, 24, 0, 14);
-        timeCard.addView(lSub);
-
-        LinearLayout langRow = new LinearLayout(this);
-        langRow.setOrientation(LinearLayout.HORIZONTAL);
-        addLangPillBtn(langRow, "বাংলা", "bn");
-        addLangPillBtn(langRow, "UK Eng", "en_uk");
-        addLangPillBtn(langRow, "US Eng", "en_us");
-        timeCard.addView(langRow);
-
-        LinearLayout genderRow = new LinearLayout(this);
-        genderRow.setOrientation(LinearLayout.HORIZONTAL);
-        genderRow.setPadding(0, 14, 0, 0);
-        addGenderBtn(genderRow, "মেয়ে কণ্ঠ (Girl)", false);
-        addGenderBtn(genderRow, "ছেলে কণ্ঠ (Boy)", true);
-        timeCard.addView(genderRow);
-        root.addView(timeCard);
-
-        // --- CARD 5: NAMAZ & RAMADAN CALENDAR ---
-        LinearLayout islamCard = createCard("#131A2A", "#1E293B");
-        addSectionHeader(islamCard, "🕌  ৫ ওয়াক্ত নামাজ ও রমজান ক্যালেন্ডার");
-        addStyledSwitch(islamCard, "৫ ওয়াক্ত নামাজের ভয়েস অ্যালার্ম", "namaz_alarm", true, false);
-
-        EditText fajrIn = createStyledInput("ফজর (যেমন: 05:00)");
-        fajrIn.setText(prefs.getString("fajr_time", "05:00"));
-        islamCard.addView(fajrIn);
-
-        EditText dhuhrIn = createStyledInput("জোহর (যেমন: 13:00)");
-        dhuhrIn.setText(prefs.getString("dhuhr_time", "13:00"));
-        islamCard.addView(dhuhrIn);
-
-        EditText asrIn = createStyledInput("আসর (যেমন: 16:15)");
-        asrIn.setText(prefs.getString("asr_time", "16:15"));
-        islamCard.addView(asrIn);
-
-        EditText maghribIn = createStyledInput("মাগরিব (যেমন: 18:05)");
-        maghribIn.setText(prefs.getString("maghrib_time", "18:05"));
-        islamCard.addView(maghribIn);
-
-        EditText ishaIn = createStyledInput("এশা (যেমন: 19:30)");
-        ishaIn.setText(prefs.getString("isha_time", "19:30"));
-        islamCard.addView(ishaIn);
-
-        Button saveNamazBtn = createActionBtn("নামাজের সময় সেভ করুন", "#0EA5E9");
-        saveNamazBtn.setOnClickListener(v -> {
-            prefs.edit()
-                .putString("fajr_time", fajrIn.getText().toString().trim())
-                .putString("dhuhr_time", dhuhrIn.getText().toString().trim())
-                .putString("asr_time", asrIn.getText().toString().trim())
-                .putString("maghrib_time", maghribIn.getText().toString().trim())
-                .putString("isha_time", ishaIn.getText().toString().trim())
-                .apply();
-            Toast.makeText(this, "৫ ওয়াক্ত নামাজের সময় সেভ হয়েছে!", Toast.LENGTH_SHORT).show();
+        // Card 5: Namaz & Ramadan
+        LinearLayout c5 = card("#131A2A", "#1E293B");
+        hdr(c5, "🕌 নামাজ ও রমজান ক্যালেন্ডার");
+        sw(c5, "৫ ওয়াক্ত নামাজের ভয়েস অ্যালার্ম", "namaz_alarm", true, false);
+        EditText fIn = inp("ফজর (05:00)"); fIn.setText(prefs.getString("fajr_time", "05:00")); c5.addView(fIn);
+        EditText dIn = inp("জোহর (13:00)"); dIn.setText(prefs.getString("dhuhr_time", "13:00")); c5.addView(dIn);
+        EditText aIn = inp("আসর (16:15)"); aIn.setText(prefs.getString("asr_time", "16:15")); c5.addView(aIn);
+        EditText mIn = inp("মাগরিব (18:05)"); mIn.setText(prefs.getString("maghrib_time", "18:05")); c5.addView(mIn);
+        EditText iIn = inp("এশা (19:30)"); iIn.setText(prefs.getString("isha_time", "19:30")); c5.addView(iIn);
+        btn(c5, "নামাজের সময় সেভ করুন", "#0EA5E9", v -> {
+            prefs.edit().putString("fajr_time", fIn.getText().toString()).putString("dhuhr_time", dIn.getText().toString()).putString("asr_time", aIn.getText().toString()).putString("maghrib_time", mIn.getText().toString()).putString("isha_time", iIn.getText().toString()).apply();
+            Toast.makeText(this, "সেভ হয়েছে", Toast.LENGTH_SHORT).show();
         });
-        islamCard.addView(saveNamazBtn);
+        btn(c5, "রমজান ফাইল (.txt) যুক্ত করুন", "#8B5CF6", v -> {
+            Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+            i.setType("text/plain");
+            startActivityForResult(i, 202);
+        });
+        root.addView(c5);
 
-        Button ramadanBtn = createActionBtn("রমজান ক্যালেন্ডার ফাইল (.txt) যুক্ত করুন", "#8B5CF6");
-        ramadanBtn.setOnClickListener(v -> {
+        // Card 6: Permissions
+        LinearLayout c6 = card("#131A2A", "#1E293B");
+        hdr(c6, "⚙️ সিস্টেম পারমিশন");
+        btn(c6, "১. কল ও SMS পারমিশন দিন", "#F59E0B", v -> reqPerms());
+        btn(c6, "২. নোটিফিকেশন অ্যাক্সেস অন করুন", "#EC4899", v -> startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)));
+        root.addView(c6);
+
+        scroll.addView(root);
+        setContentView(scroll);
+        if (active) startService(new Intent(this, AssistantBackgroundService.class));
+    }
+
+    private LinearLayout card(String bg, String st) {
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        l.setPadding(36, 32, 36, 32);
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(Color.parseColor(bg)); g.setCornerRadius(32f); g.setStroke(2, Color.parseColor(st));
+        l.setBackground(g);
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
+        p.setMargins(0, 0, 0, 24); l.setLayoutParams(p);
+        return l;
+    }
+
+    private void hdr(LinearLayout p, String t) {
+        TextView v = new TextView(this); v.setText(t); v.setTextColor(Color.WHITE); v.setTextSize(16); v.setTypeface(null, Typeface.BOLD); v.setPadding(0, 0, 0, 14); p.addView(v);
+    }
+
+    private void sw(LinearLayout p, String t, String k, boolean d, boolean m) {
+        Switch s = new Switch(this); s.setText(t); s.setTextColor(Color.parseColor("#E2E8F0")); s.setPadding(0, 14, 0, 14); s.setChecked(prefs.getBoolean(k, d));
+        s.setOnCheckedChangeListener((b, c) -> {
+            prefs.edit().putBoolean(k, c).apply();
+            if (m) { updateBadge(c); Intent i = new Intent(this, AssistantBackgroundService.class); if (c) startService(i); else stopService(i); }
+        });
+        p.addView(s);
+    }
+
+    private void updateBadge(boolean a) {
+        statusBadge.setText(a ? " ● ACTIVE " : " ○ STANDBY ");
+        statusBadge.setTextColor(a ? Color.parseColor("#10B981") : Color.parseColor("#94A3B8"));
+        GradientDrawable g = new GradientDrawable(); g.setColor(a ? Color.parseColor("#064E3B") : Color.parseColor("#0F172A")); g.setCornerRadius(40f);
+        statusBadge.setBackground(g); statusBadge.setPadding(12, 6, 12, 6);
+    }
+
+    private void pill(LinearLayout r, String t, String c, android.view.View.OnClickListener l) {
+        Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setTextSize(11); b.setAllCaps(false);
+        GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(35f); b.setBackground(g);
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, 90, 1f); p.setMargins(5, 0, 5, 0); b.setLayoutParams(p);
+        b.setOnClickListener(l); r.addView(b);
+    }
+
+    private EditText inp(String h) {
