@@ -7,9 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.BatteryManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.StatFs;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -21,6 +23,7 @@ import java.util.Locale;
 public class AssistantBackgroundService extends Service {
     private Handler handler;
     private int lastSpokenBattery = -1;
+    private boolean storageWarned = false;
 
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
@@ -71,9 +74,13 @@ public class AssistantBackgroundService extends Service {
         int min = cal.get(Calendar.MINUTE);
         int hour = cal.get(Calendar.HOUR_OF_DAY);
         int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        String nowHHMM = String.format(Locale.US, "%02d:%02d", hour, min);
+
+        // Sleep Mode Check (12 AM to 5 AM)
+        boolean isSleepTime = prefs.getBoolean("sleep_mode", true) && (hour >= 0 && hour < 5);
 
         int interval = prefs.getInt("clock_interval", 30);
-        if (interval > 0 && (min % interval == 0)) {
+        if (!isSleepTime && interval > 0 && (min % interval == 0)) {
             SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.US);
             SystemEventReceiver.speak(this, "টাইম ইজ " + sdf.format(new Date()));
         }
@@ -82,8 +89,33 @@ public class AssistantBackgroundService extends Service {
             SystemEventReceiver.speak(this, "আজ পবিত্র শুক্রবার");
         }
 
-        if (hour == 6 && min == 0) {
+        // 5 Waqt Namaz Check
+        if (prefs.getBoolean("namaz_alarm", true)) {
+            if (nowHHMM.equals(prefs.getString("fajr_time", "05:00"))) SystemEventReceiver.speak(this, "ফজরের নামাজের সময় হয়েছে");
+            if (nowHHMM.equals(prefs.getString("dhuhr_time", "13:00"))) SystemEventReceiver.speak(this, "জোহরের নামাজের সময় হয়েছে");
+            if (nowHHMM.equals(prefs.getString("asr_time", "16:15"))) SystemEventReceiver.speak(this, "আসরের নামাজের সময় হয়েছে");
+            if (nowHHMM.equals(prefs.getString("maghrib_time", "18:05"))) SystemEventReceiver.speak(this, "মাগরিবের নামাজের সময় হয়েছে");
+            if (nowHHMM.equals(prefs.getString("isha_time", "19:30"))) SystemEventReceiver.speak(this, "এশার নামাজের সময় হয়েছে");
+        }
+
+        // Morning Briefing & Ramadan Calendar at 7:00 AM
+        if (hour == 7 && min == 0) {
+            if (prefs.getBoolean("morning_brief", true)) {
+                String dateStr = new SimpleDateFormat("dd MMMM", Locale.US).format(new Date());
+                SystemEventReceiver.speak(this, "আসসালামু আলাইকুম, শুভ সকাল। আজ " + dateStr);
+            }
             readRamadanFile();
+        }
+
+        // Storage Health Check
+        if (prefs.getBoolean("storage_warn", true) && !storageWarned) {
+            StatFs stat = new StatFs(Environment.getDataDirectory().getPath());
+            long total = stat.getBlockCountLong() * stat.getBlockSizeLong();
+            long free = stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
+            if (total > 0 && ((total - free) * 100 / total) >= 90) {
+                storageWarned = true;
+                SystemEventReceiver.speak(this, "সতর্কতা, ফোনের স্টোরেজ ৯০ পার্সেন্ট পূর্ণ হয়ে গেছে");
+            }
         }
     }
 
@@ -119,4 +151,4 @@ public class AssistantBackgroundService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-            }
+}
