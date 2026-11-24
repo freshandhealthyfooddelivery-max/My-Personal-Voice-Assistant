@@ -1,22 +1,14 @@
 package com.personal.voiceassistant;
 
 import android.Manifest;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.annotation.SuppressLint;
+import android.content.*;
 import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
-import android.os.BatteryManager;
-import android.os.Build;
-import android.os.Bundle;
+import android.os.*;
 import android.provider.Settings;
-import android.view.Gravity;
-import android.view.View;
-import android.widget.*;
+import android.webkit.*;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import java.io.*;
@@ -24,216 +16,78 @@ import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
     private SharedPreferences prefs;
-    private LinearLayout contentArea;
-    private boolean isEn = false;
+    private WebView webView;
 
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
-        getWindow().setStatusBarColor(Color.parseColor("#000000"));
-        getWindow().setNavigationBarColor(Color.parseColor("#000000"));
-        prefs = getSharedPreferences("AssistantPrefs", MODE_PRIVATE);
-        isEn = prefs.getBoolean("ui_english", false);
+        getWindow().setStatusBarColor(Color.parseColor("#040711"));
+        getWindow().setNavigationBarColor(Color.parseColor("#040711"));
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.parseColor("#000000"));
+        prefs = getSharedPreferences("NahimUltraV5", MODE_PRIVATE);
+        SystemEventReceiver.initEngine(this);
 
-        // Samsung One UI 7 Header
-        LinearLayout top = new LinearLayout(this);
-        top.setPadding(48, 56, 48, 28);
-        top.setGravity(Gravity.CENTER_VERTICAL);
-
-        LinearLayout tBox = new LinearLayout(this);
-        tBox.setOrientation(LinearLayout.VERTICAL);
-        tBox.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-
-        TextView t1 = new TextView(this);
-        t1.setText("Galaxy AI");
-        t1.setTextColor(Color.WHITE);
-        t1.setTextSize(30);
-        t1.setTypeface(null, Typeface.BOLD);
-
-        TextView t2 = new TextView(this);
-        t2.setText("✦ Crafted by NAHIM  •  One UI Ultra");
-        t2.setTextColor(Color.parseColor("#3E91FF"));
-        t2.setTextSize(12);
-        t2.setTypeface(null, Typeface.BOLD);
-        tBox.addView(t1);
-        tBox.addView(t2);
-        top.addView(tBox);
-
-        Button lBtn = new Button(this);
-        lBtn.setText(isEn ? "বাংলা" : "English");
-        lBtn.setTextColor(Color.WHITE);
-        lBtn.setTextSize(12);
-        lBtn.setAllCaps(false);
-        GradientDrawable lg = new GradientDrawable();
-        lg.setColor(Color.parseColor("#1C1C1E"));
-        lg.setCornerRadius(50f);
-        lg.setStroke(2, Color.parseColor("#2C2C2E"));
-        lBtn.setBackground(lg);
-        lBtn.setOnClickListener(v -> { isEn = !isEn; prefs.edit().putBoolean("ui_english", isEn).apply(); recreate(); });
-        top.addView(lBtn);
-        root.addView(top);
-
-        ScrollView sc = new ScrollView(this);
-        sc.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
-        contentArea = new LinearLayout(this);
-        contentArea.setOrientation(LinearLayout.VERTICAL);
-        contentArea.setPadding(36, 8, 36, 32);
-        sc.addView(contentArea);
-        root.addView(sc);
-
-        // Floating One UI Pill Dock
-        LinearLayout dockWrap = new LinearLayout(this);
-        dockWrap.setPadding(32, 10, 32, 24);
-        LinearLayout nav = new LinearLayout(this);
-        nav.setPadding(16, 12, 16, 12);
-        GradientDrawable ng = new GradientDrawable();
-        ng.setColor(Color.parseColor("#161618"));
-        ng.setCornerRadius(60f);
-        ng.setStroke(2, Color.parseColor("#2C2C2E"));
-        nav.setBackground(ng);
-        tab(nav, isEn ? "Home" : "হোম", 0);
-        tab(nav, isEn ? "Comm" : "কল/মেসেজ", 1);
-        tab(nav, isEn ? "Guard" : "নিরাপত্তা", 2);
-        tab(nav, isEn ? "Islam" : "ক্যালেন্ডার", 3);
-        tab(nav, isEn ? "System" : "সিস্টেম", 4);
-        dockWrap.addView(nav);
-        root.addView(dockWrap);
-
-        setContentView(root);
-        render(0);
-        safeStartService();
+        webView = new WebView(this);
+        webView.setBackgroundColor(Color.parseColor("#040711"));
+        WebSettings ws = webView.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setDomStorageEnabled(true);
+        webView.addJavascriptInterface(new NativeBridge(), "NahimCore");
+        webView.loadDataWithBaseURL(null, buildFlagshipHtml(), "text/html", "UTF-8", null);
+        setContentView(webView);
     }
 
-    private void safeStartService() {
-        try {
-            if (prefs.getBoolean("master_switch", false)) startService(new Intent(this, AssistantBackgroundService.class));
-        } catch (Exception ignored) {}
-    }
-
-    private void tab(LinearLayout b, String l, int i) {
-        Button bt = new Button(this);
-        bt.setText(l);
-        bt.setTextColor(Color.parseColor("#F2F2F7"));
-        bt.setTextSize(11);
-        bt.setTypeface(null, Typeface.BOLD);
-        bt.setAllCaps(false);
-        bt.setBackgroundColor(Color.TRANSPARENT);
-        bt.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-        bt.setOnClickListener(v -> render(i));
-        b.addView(bt);
-    }
-
-    private void render(int t) {
-        contentArea.removeAllViews();
-        if (t == 0) {
-            // Galaxy AI Orb Hero Card
-            LinearLayout orbCard = card("#161618");
-            orbCard.setGravity(Gravity.CENTER_HORIZONTAL);
-            Button aiOrb = new Button(this);
-            aiOrb.setText("✦\n" + (isEn ? "Tap to Ask AI" : "কথা বলতে চাপ দিন"));
-            aiOrb.setTextColor(Color.WHITE);
-            aiOrb.setTextSize(14);
-            aiOrb.setTypeface(null, Typeface.BOLD);
-            aiOrb.setAllCaps(false);
-            GradientDrawable og = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{Color.parseColor("#3E91FF"), Color.parseColor("#8A4FFF")});
-            og.setShape(GradientDrawable.OVAL);
-            aiOrb.setBackground(og);
-            LinearLayout.LayoutParams op = new LinearLayout.LayoutParams(260, 260);
-            op.setMargins(0, 12, 0, 20);
-            aiOrb.setLayoutParams(op);
-            ObjectAnimator pulse = ObjectAnimator.ofFloat(aiOrb, "scaleX", 0.96f, 1.04f);
-            pulse.setDuration(1400); pulse.setRepeatCount(ValueAnimator.INFINITE); pulse.setRepeatMode(ValueAnimator.REVERSE); pulse.start();
-            aiOrb.setOnClickListener(v -> { try { startActivity(new Intent(this, VoiceAssistActivity.class)); } catch (Exception ignored) {} });
-            orbCard.addView(aiOrb);
-
-            boolean on = prefs.getBoolean("master_switch", false);
-            TextView st = new TextView(this);
-            st.setText((on ? (isEn ? "● GALAXY AI ACTIVE" : "● গ্যালাক্সি এআই সচল") : (isEn ? "○ STANDBY MODE" : "○ বন্ধ আছে")) + "  •  ⚡ " + getBat());
-            st.setTextColor(on ? Color.parseColor("#30D158") : Color.parseColor("#8E8E93"));
-            st.setTextSize(12);
-            st.setTypeface(null, Typeface.BOLD);
-            orbCard.addView(st);
-            sw(orbCard, isEn ? "Master AI Engine" : "মাস্টার এআই ইঞ্জিন (অন/অফ)", "master_switch", false, true);
-            contentArea.addView(orbCard);
-
-            // Quick Actions Card
-            LinearLayout qCard = card("#161618");
-            hdr(qCard, isEn ? "Instant Voice Briefings" : "তাৎক্ষণিক ভয়েস তথ্য");
-            btn(qCard, isEn ? "📅 Bangla Date, Month & Day" : "📅 বাংলা তারিখ, মাস ও বার শুনুন", "#1C1C1E", x -> SystemEventReceiver.speak(this, SmartCalendarWeather.getBanglaDateInfo(this)));
-            btn(qCard, isEn ? "🌙 Arabic Hijri Calendar" : "🌙 আরবি হিজরি তারিখ ও সন শুনুন", "#1C1C1E", x -> SystemEventReceiver.speak(this, SmartCalendarWeather.getHijriDateInfo(this)));
-            btn(qCard, isEn ? "🌦️ Live Weather Forecast" : "🌦️ বর্তমান আবহাওয়ার বিস্তারিত শুনুন", "#1C1C1E", x -> SmartCalendarWeather.fetchAndSpeakWeather(this));
-            btn(qCard, isEn ? "⚡ Set Power-Button Assistant" : "⚡ পাওয়ার বাটনে ভয়েস অ্যাসিস্ট্যান্ট সেট করুন", "#2563EB", x -> { try { startActivity(new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS)); } catch (Exception ignored) {} });
-            contentArea.addView(qCard);
-        } else if (t == 1) {
-            LinearLayout c = card("#161618");
-            hdr(c, isEn ? "Smart Calls & Messages" : "স্মার্ট কল ও মেসেজ সেটিংস");
-            sw(c, isEn ? "SMS Sender Announcer" : "SMS প্রেরকের নাম বা নাম্বার বলা", "sms_switch", false, false);
-            sw(c, isEn ? "Read Full SMS Content" : "সম্পূর্ণ SMS পড়ে শোনানো", "sms_full_read", false, false);
-            sw(c, isEn ? "App Notifications (WA/FB)" : "সব অ্যাপের নোটিফিকেশন বলা", "app_notif_switch", false, false);
-            sw(c, isEn ? "Headphone Privacy Guard" : "হেডফোন প্রাইভেসি মোড", "headphone_privacy", false, false);
-            sw(c, isEn ? "Incoming Call Announcer" : "ইনকামিং কলের নাম বা নাম্বার বলা", "call_switch", false, false);
-            sw(c, isEn ? "Bike Riding Auto-Speaker" : "বাইক রাইডিং মোড (অটো স্পিকার)", "riding_mode", false, false);
-            sw(c, isEn ? "Auto Un-Silent (1 Hour)" : "সাইলেন্ট করলে ১ ঘণ্টা পর সাউন্ড অন", "auto_unsilent", false, false);
-            EditText n = inp(isEn ? "Number (017...)" : "মোবাইল নাম্বার লিখুন");
-            EditText s = inp(isEn ? "Redial Seconds (15)" : "কত সেকেন্ড পর কেটে আবার দেবে");
-            c.addView(n); c.addView(s);
-            btn(c, isEn ? "▶ Start Auto-Redial Loop" : "▶ অটো-কল লুপ শুরু করুন", "#30D158", x -> {
-                String num = n.getText().toString().trim(), sec = s.getText().toString().trim();
-                if (!num.isEmpty() && !sec.isEmpty()) {
-                    prefs.edit().putBoolean("autocall_active", true).apply();
-                    Intent i = new Intent(this, AssistantBackgroundService.class); i.setAction("START_AUTOCALL"); i.putExtra("number", num); i.putExtra("seconds", Integer.parseInt(sec)); startService(i);
-                }
+    public class NativeBridge {
+        @JavascriptInterface public boolean getBool(String k) { return prefs.getBoolean(k, false); }
+        @JavascriptInterface public void setBool(String k, boolean v) {
+            prefs.edit().putBoolean(k, v).apply();
+            if ("master_switch".equals(k)) {
+                try {
+                    Intent i = new Intent(MainActivity.this, AssistantBackgroundService.class);
+                    if (v) startService(i); else stopService(i);
+                } catch (Exception ignored) {}
+            }
+        }
+        @JavascriptInterface public int getInt(String k) { return prefs.getInt(k, 0); }
+        @JavascriptInterface public void setInt(String k, int v) { prefs.edit().putInt(k, v).apply(); }
+        @JavascriptInterface public String getStr(String k, String d) { return prefs.getString(k, d); }
+        @JavascriptInterface public void setStr(String k, String v) { prefs.edit().putString(k, v).apply(); }
+        @JavascriptInterface public int getBattery() {
+            Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            return i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, 100) : 100;
+        }
+        @JavascriptInterface public void action(String cmd) {
+            runOnUiThread(() -> {
+                if ("voice_ask".equals(cmd)) startActivity(new Intent(MainActivity.this, VoiceAssistActivity.class));
+                else if ("bangla_date".equals(cmd)) SystemEventReceiver.speak(MainActivity.this, SmartCalendarWeather.getBanglaDateInfo(MainActivity.this));
+                else if ("arabic_date".equals(cmd)) SystemEventReceiver.speak(MainActivity.this, SmartCalendarWeather.getHijriDateInfo(MainActivity.this));
+                else if ("weather".equals(cmd)) SmartCalendarWeather.fetchAndSpeakWeather(MainActivity.this);
+                else if ("lock_assist".equals(cmd)) startActivity(new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS));
+                else if ("perm_sys".equals(cmd)) reqPerms();
+                else if ("perm_notif".equals(cmd)) startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+                else if ("pick_ramadan".equals(cmd)) pick(201);
+                else if ("pick_bangla".equals(cmd)) pick(202);
+                else if ("pick_arabic".equals(cmd)) pick(203);
+                else if ("test_voice".equals(cmd)) SystemEventReceiver.speak(MainActivity.this, "নমস্কার ও আসসালামু আলাইকুম, আমি আপনার পার্সোনাল এআই অ্যাসিস্ট্যান্ট");
             });
-            btn(c, isEn ? "⏹ Stop Auto-Redial" : "⏹ অটো-কল বন্ধ করুন", "#FF453A", x -> { prefs.edit().putBoolean("autocall_active", false).apply(); Toast.makeText(this, "Stopped", Toast.LENGTH_SHORT).show(); });
-            contentArea.addView(c);
-        } else if (t == 2) {
-            LinearLayout c = card("#161618");
-            hdr(c, isEn ? "Device Guard & Sensors" : "ব্যাটারি, সেন্সর ও নিরাপত্তা");
-                        sw(c, isEn ? "Charger & Battery % Voice" : "চার্জার ও ব্যাটারি পার্সেন্টেজ বলা", "battery_switch", false, false);
-            sw(c, isEn ? "100% Full Charge Alarm" : "১০০% চার্জ পূর্ণ হলে সুরক্ষা অ্যালার্ম", "full_charge_alarm", false, false);
-            sw(c, isEn ? "Anti-Theft Charger Siren" : "চার্জার চুরি সাইরেন", "theft_alarm", false, false);
-            sw(c, isEn ? "Shake Phone for Flashlight" : "ফোন ঝাঁকালে ফ্ল্যাশলাইট অন/অফ", "shake_torch", false, false);
-            sw(c, isEn ? "Wi-Fi & Data Drop Alert" : "ওয়াইফাই ও ডাটা সংযোগ অ্যালার্ট", "network_alert", false, false);
-            sw(c, isEn ? "90% Storage Full Warning" : "মেমোরি ৯০% পূর্ণ হলে সতর্কতা", "storage_warn", false, false);
-            contentArea.addView(c);
-        } else if (t == 3) {
-            LinearLayout c = card("#161618");
-            hdr(c, isEn ? "Namaz & Custom Calendars" : "নামাজ, রমজান ও ক্যালেন্ডার");
-            sw(c, isEn ? "5 Waqt Namaz Voice Alarm" : "৫ ওয়াক্ত নামাজের ভয়েস অ্যালার্ম", "namaz_alarm", false, false);
-            sw(c, isEn ? "Friday 8AM Special Alert" : "প্রতি শুক্রবার সকাল ৮টায় বিশেষ বার্তা", "friday_alert", false, false);
-            btn(c, isEn ? "Upload Ramadan File (.txt)" : "রমজান ক্যালেন্ডার ফাইল (.txt) দিন", "#1C1C1E", x -> pick(201));
-            btn(c, isEn ? "Upload Bangla Calendar (.txt)" : "বাংলা ক্যালেন্ডার ফাইল (.txt) দিন", "#1C1C1E", x -> pick(202));
-            btn(c, isEn ? "Upload Arabic Hijri (.txt)" : "আরবি হিজরি ফাইল (.txt) দিন", "#1C1C1E", x -> pick(203));
-            contentArea.addView(c);
-        } else {
-            LinearLayout c = card("#161618");
-            hdr(c, isEn ? "System, Voice & Permissions" : "ঘড়ি, কণ্ঠ ও সিস্টেম পারমিশন");
-            sw(c, isEn ? "Night Sleep Mode (12AM-5AM)" : "রাতের স্লিপ মোড (১২টা-৫টা নিরব)", "sleep_mode", false, false);
-            sw(c, isEn ? "7AM Morning Briefing" : "সকাল ৭টায় গুড মর্নিং ব্রিফিং", "morning_brief", false, false);
-            LinearLayout r1 = new LinearLayout(this);
-            pill(r1, "15m", "#2C2C2E", x -> prefs.edit().putInt("clock_interval", 15).apply());
-            pill(r1, "30m", "#2C2C2E", x -> prefs.edit().putInt("clock_interval", 30).apply());
-            pill(r1, "1h", "#2C2C2E", x -> prefs.edit().putInt("clock_interval", 60).apply());
-            pill(r1, "Off", "#1C1C1E", x -> prefs.edit().putInt("clock_interval", 0).apply());
-            c.addView(r1);
-            LinearLayout r2 = new LinearLayout(this); r2.setPadding(0, 14, 0, 14);
-            pill(r2, "বাংলা", "#3E91FF", x -> { prefs.edit().putString("voice_lang", "bn").apply(); SystemEventReceiver.speak(this, "বাংলা কণ্ঠ"); });
-            pill(r2, "UK", "#3E91FF", x -> { prefs.edit().putString("voice_lang", "en_uk").apply(); SystemEventReceiver.speak(this, "UK English"); });
-            pill(r2, "Female", "#BF5AF2", x -> { prefs.edit().putBoolean("voice_male", false).apply(); SystemEventReceiver.speak(this, "মেয়ে কণ্ঠ"); });
-            pill(r2, "Male", "#5E5CE6", x -> { prefs.edit().putBoolean("voice_male", true).apply(); SystemEventReceiver.speak(this, "ছেলে কণ্ঠ"); });
-            c.addView(r2);
-            btn(c, isEn ? "1. Grant All System Permissions" : "১. সব ফোনের পারমিশন দিন", "#FF9F0A", x -> reqPerms());
-            btn(c, isEn ? "2. Enable Notification Access" : "২. নোটিফিকেশন অ্যাক্সেস অন করুন", "#FF375F", x -> { try { startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)); } catch (Exception ignored) {} });
-            contentArea.addView(c);
+        }
+        @JavascriptInterface public void startAutoCall(String num, int sec) {
+            runOnUiThread(() -> {
+                prefs.edit().putBoolean("autocall_active", true).apply();
+                Intent i = new Intent(MainActivity.this, AssistantBackgroundService.class);
+                i.setAction("START_AUTOCALL"); i.putExtra("number", num); i.putExtra("seconds", sec);
+                startService(i);
+                Toast.makeText(MainActivity.this, "Auto-Call Active", Toast.LENGTH_SHORT).show();
+            });
+        }
+        @JavascriptInterface public void stopAutoCall() {
+            prefs.edit().putBoolean("autocall_active", false).apply();
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, "Auto-Call Stopped", Toast.LENGTH_SHORT).show());
         }
     }
 
-    private String getBat() { Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); return i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, 100) + "%" : "100%"; }
     private void pick(int c) { Intent i = new Intent(Intent.ACTION_GET_CONTENT); i.setType("text/plain"); startActivityForResult(i, c); }
 
     @Override
@@ -241,21 +95,43 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(req, res, data);
         if (res == RESULT_OK && data != null && req >= 201 && req <= 203 && data.getData() != null) {
             String f = (req == 201) ? "ramadan.txt" : (req == 202 ? "bangla_cal.txt" : "arabic_cal.txt");
-            try { InputStream in = getContentResolver().openInputStream(data.getData()); FileOutputStream out = new FileOutputStream(new File(getExternalFilesDir(null), f)); int b; while ((b = in.read()) != -1) out.write(b); in.close(); out.close(); Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show(); } catch (Exception ignored) {}
+            try (InputStream in = getContentResolver().openInputStream(data.getData()); FileOutputStream out = new FileOutputStream(new File(getExternalFilesDir(null), f))) {
+                int b; while ((b = in.read()) != -1) out.write(b);
+                Toast.makeText(this, "Calendar File Imported!", Toast.LENGTH_SHORT).show();
+            } catch (Exception ignored) {}
         }
     }
 
-    private LinearLayout card(String bg) { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(40, 34, 40, 34); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(bg)); g.setCornerRadius(56f); l.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 0, 0, 26); l.setLayoutParams(p); return l; }
-    private void hdr(LinearLayout p, String t) { TextView v = new TextView(this); v.setText(t); v.setTextColor(Color.parseColor("#8E8E93")); v.setTextSize(13); v.setTypeface(null, Typeface.BOLD); v.setPadding(0, 0, 0, 16); p.addView(v); }
-    private void sw(LinearLayout p, String t, String k, boolean d, boolean m) { Switch s = new Switch(this); s.setText(t); s.setTextColor(Color.WHITE); s.setTextSize(15); s.setPadding(0, 16, 0, 16); s.setChecked(prefs.getBoolean(k, d)); s.setOnCheckedChangeListener((b, c) -> { prefs.edit().putBoolean(k, c).apply(); if (m) { render(0); if (c) safeStartService(); else try { stopService(new Intent(this, AssistantBackgroundService.class)); } catch (Exception ignored) {} } }); p.addView(s); }
-    private void pill(LinearLayout r, String t, String c, View.OnClickListener l) { Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setTextSize(12); b.setAllCaps(false); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(45f); b.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, 96, 1f); p.setMargins(6, 0, 6, 0); b.setLayoutParams(p); b.setOnClickListener(l); r.addView(b); }
-    private EditText inp(String h) { EditText e = new EditText(this); e.setHint(h); e.setHintTextColor(Color.parseColor("#636366")); e.setTextColor(Color.WHITE); e.setPadding(28, 22, 28, 22); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor("#1C1C1E")); g.setCornerRadius(32f); e.setBackground(g); LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(0, 8, 0, 12); e.setLayoutParams(p); return e; }
-    private void btn(LinearLayout p, String t, String c, View.OnClickListener l) { Button b = new Button(this); b.setText(t); b.setTextColor(Color.WHITE); b.setTextSize(14); b.setAllCaps(false); GradientDrawable g = new GradientDrawable(); g.setColor(Color.parseColor(c)); g.setCornerRadius(36f); b.setBackground(g); LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, 115); lp.setMargins(0, 10, 0, 8); b.setLayoutParams(lp); b.setOnClickListener(l); p.addView(b); }
     private void reqPerms() {
-        List<String> p = new ArrayList<>(); p.add(Manifest.permission.RECEIVE_SMS); p.add(Manifest.permission.READ_SMS); p.add(Manifest.permission.READ_PHONE_STATE); p.add(Manifest.permission.CALL_PHONE); p.add(Manifest.permission.ANSWER_PHONE_CALLS); p.add(Manifest.permission.READ_CONTACTS); p.add(Manifest.permission.RECORD_AUDIO); p.add(Manifest.permission.CAMERA);
+        List<String> p = new ArrayList<>(Arrays.asList(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE, Manifest.permission.ANSWER_PHONE_CALLS, Manifest.permission.READ_CONTACTS, Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA));
         if (Build.VERSION.SDK_INT >= 33) p.add(Manifest.permission.POST_NOTIFICATIONS);
         String[] a = new String[p.size()]; for (int i = 0; i < p.size(); i++) a[i] = p.get(i);
         ActivityCompat.requestPermissions(this, a, 101);
     }
-}
 
+    private String buildFlagshipHtml() {
+        return "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'><style>"
+            + "*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}"
+            + "body{background:radial-gradient(circle at 20% 10%,#0f1e3d 0%,#040711 55%,#02040a 100%);color:#f8fafc;min-height:100vh;padding:20px 16px 40px}"
+            + ".hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}"
+            + ".brand h1{font-size:24px;font-weight:800;background:linear-gradient(90deg,#fff,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}"
+            + ".brand p{font-size:11px;color:#38bdf8;font-weight:600;letter-spacing:1px;margin-top:2px}"
+            + ".lang-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;backdrop-filter:blur(12px)}"
+            + ".glass{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:26px;padding:18px;margin-bottom:16px;backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,0.4)}"
+            + ".orb-wrap{text-align:center;padding:14px 0}"
+            + ".orb{width:110px;height:110px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#2563eb,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;box-shadow:0 0 35px rgba(56,189,248,0.45);animation:pulse 2.2s infinite}"
+            + "@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 28px rgba(56,189,248,0.4)}50%{transform:scale(1.06);box-shadow:0 0 48px rgba(124,58,237,0.7)}}"
+            + ".row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.06)}"
+            + ".row:last-child{border:none}"
+            + ".ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0}"
+            + ".lbl{flex:1;font-size:14px;font-weight:500}.sub{font-size:11px;color:#94a3b8;margin-top:2px}"
+            + ".sw{position:relative;width:48px;height:28px}.sw input{opacity:0;width:0;height:0}"
+            + ".sl{position:absolute;inset:0;background:#1e293b;border-radius:30px;transition:.3s;border:1px solid rgba(255,255,255,0.1)}"
+            + ".sl:before{content:'';position:absolute;height:22px;width:22px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.3s}"
+            + "input:checked+.sl{background:linear-gradient(90deg,#2563eb,#38bdf8)}input:checked+.sl:before{transform:translateX(20px)}"
+            + ".grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}"
+            + ".tile{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:22px;padding:16px;transition:.2s}"
+            + ".tile:active{transform:scale(0.97);background:rgba(56,189,248,0.12)}"
+            + ".tile h3{font-size:14px;margin-top:10px;font-weight:600}.tile p{font-size:11px;color:#94a3b8;margin-top:3px}"
+            + ".page{display:none}.page.active{display:block;animation:fade .25s ease}@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}"
+            + ".back{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);padding:8px 14px;border-radius:16px;font-size:13px;font-weight:600;margin-bottom:16px}"
